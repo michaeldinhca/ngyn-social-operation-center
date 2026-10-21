@@ -29,7 +29,16 @@ Users and login (OIDC/SAML, MFA), RBAC with function vs account scoping, approva
 
 ## Blocking risk: data residency
 
-The brief and MSA treat **Canada-only storage and access of personal information** as a key contract concern. With Zernio, resident comments and DMs, and the OAuth tokens, pass through and are stored by Zernio. Their docs don't state a hosting region, sub-processors or encryption of tokens. Until we have a DPA and a written region answer, Zernio can't be proposed for a Canadian municipal production deployment.
+The brief and MSA treat **Canada-only storage and access of personal information** as a key contract concern.
+
+Zernio is not a pass-through. Evidence checked 2026-10-21:
+
+- [Privacy policy](https://zernio.com/privacy-policy) section 1.2: Zernio "collect[s] and store[s] access tokens and basic profile information" for connected accounts. Those tokens give full API access to each municipal account. For YouTube, tokens are "encrypted at rest", and scheduled content and metrics are stored.
+- [Sub-processors](https://zernio.com/subprocessors) (DPA Schedule 2, dated 2026-10-09): primary Postgres database in London (AWS eu-west-2), app hosting on Vercel London plus global edge, media storage on Cloudflare in Western Europe, operational logs at Axiom US East, and several providers "not pinned to one region" (Upstash Redis, Resend, PostHog and others).
+- [Multi-tenant guide](https://docs.zernio.com/guides/multi-tenant): deleting an account "deletes its analytics data", so analytics are stored.
+- Comments and DMs reach us through Zernio's inbox API and webhooks, so resident messages transit Zernio's infrastructure at least. Whether they are also stored, and for how long, isn't documented.
+
+There's no Canadian region. A Canadian municipal production deployment can't use Zernio unless the client gives written approval for the UK/EU/US processing and the DPA terms are acceptable. Without that approval, the municipal path needs direct platform adapters behind the same `SocialGateway` interface.
 
 This does **not** block the UI mockup, and it doesn't block a non-municipal pilot.
 

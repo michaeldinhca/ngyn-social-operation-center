@@ -21,7 +21,7 @@ Last updated: 2026-10-21. Source: https://docs.zernio.com/platforms/compare
 | Account / audience analytics | ? | S (Z-doc) | ? | ? | S, demographics (Z-doc) | ? |
 | Comment / message webhooks | S (Z-doc) | S (Z-doc) | S (Z-doc) | S (Z-doc) | S (Z-doc) | S (Z-doc) |
 | Public keyword listening (non-owned) | ? | ? | ? | ? | ? | ? |
-| Data processing region | ? | ? | ? | ? | ? | ? |
+| Data processing region (via Zernio) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) |
 
 ## Still to verify (per platform)
 
