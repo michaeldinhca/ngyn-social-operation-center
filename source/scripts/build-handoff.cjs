@@ -3,7 +3,9 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
-const out=path.resolve(root,'../../handoff/ngyn-municipal-2026-10-21');
+// Default output is the repo root (source/..). Pass a directory to build a standalone handoff copy elsewhere.
+const out=path.resolve(process.argv[2]||path.join(root,'..'));
+const inRepo=path.join(out,'source')===root;
 const dist=path.join(root,'dist');
 fs.mkdirSync(out,{recursive:true});
 const embedded=[];
@@ -29,12 +31,12 @@ html=html.replace(/<script\s+src="([^"]+)"\s*>\s*<\/script>/g,(_,file)=>{
 if(/<script\s+src=|<link\s+rel="stylesheet"/i.test(html))throw new Error('A source dependency was not embedded');
 const output=path.join(out,'NGYN_Municipal_Social_Platform.html');
 fs.writeFileSync(output,html,'utf8');
-fs.mkdirSync(path.join(out,'source'),{recursive:true});
-for(const item of ['dist','tests','scripts','DEMO-NOTES.md','REVIEW-CHECKLIST.md']){
- if(fs.existsSync(path.join(root,item)))fs.cpSync(path.join(root,item),path.join(out,'source',item),{recursive:true});
+if(!inRepo){
+ fs.mkdirSync(path.join(out,'source'),{recursive:true});
+ for(const item of ['dist','tests','scripts','DEMO-NOTES.md','REVIEW-CHECKLIST.md']){
+  if(fs.existsSync(path.join(root,item)))fs.cpSync(path.join(root,item),path.join(out,'source',item),{recursive:true});
+ }
 }
-const brief='C:/Users/doquy/.codex/attachments/06d61863-402a-428e-8f4f-5ce5484de7b9/Pasted text.txt';
-if(fs.existsSync(brief))fs.copyFileSync(brief,path.join(out,'NGYN_Municipal_Social_Platform_Codex_Build_Brief.md'));
-const manifest={product:'NGYN Municipal Social Platform',snapshotDate:'2026-10-21',baseCommit:'1f07ce2e890ec8b1fe1e96a56da371e23809f17a',includesUncommittedGroupVisibilityFix:true,entry:'NGYN_Municipal_Social_Platform.html',bytes:Buffer.byteLength(html),sha256:crypto.createHash('sha256').update(html).digest('hex'),externalDependencies:['Unsplash image URLs only; no social API or AI calls'],embedded};
+const manifest={product:'NGYN Social Operation Center',builtAt:new Date().toISOString().slice(0,10),entry:'NGYN_Municipal_Social_Platform.html',bytes:Buffer.byteLength(html),sha256:crypto.createHash('sha256').update(html).digest('hex'),externalDependencies:['Unsplash image URLs only; no social API or AI calls'],embedded};
 fs.writeFileSync(path.join(out,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
 console.log(JSON.stringify({output,bytes:manifest.bytes,scripts:embedded.filter(f=>f.kind==='js').length,stylesheets:embedded.filter(f=>f.kind==='css').length,sha256:manifest.sha256},null,2));

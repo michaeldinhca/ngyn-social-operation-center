@@ -1,8 +1,6 @@
 {
-  "product": "NGYN Municipal Social Platform",
-  "snapshotDate": "2026-10-21",
-  "baseCommit": "1f07ce2e890ec8b1fe1e96a56da371e23809f17a",
-  "includesUncommittedGroupVisibilityFix": true,
+  "product": "NGYN Social Operation Center",
+  "builtAt": "2026-10-21",
   "entry": "NGYN_Municipal_Social_Platform.html",
   "bytes": 284177,
   "sha256": "010a4b84d18e82b5127f107cc444c36a7fff2324c5c68783a50e24831eecd4e9",

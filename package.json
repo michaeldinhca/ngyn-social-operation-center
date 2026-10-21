@@ -1,0 +1,15 @@
+{
+  "name": "ngyn-social-operation-center",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NGYN Social Operation Center: municipal social media management UI mockup",
+  "scripts": {
+    "start": "node serve.cjs",
+    "build": "node source/scripts/build-handoff.cjs",
+    "test": "node --test source/tests/workflow.test.cjs source/tests/channel-lifecycle.test.cjs source/tests/group-media.test.cjs source/tests/soc.test.cjs",
+    "dry-run": "node source/tests/e2e/dry-run.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}
