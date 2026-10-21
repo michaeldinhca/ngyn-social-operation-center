@@ -327,7 +327,6 @@ export function createSeed(now = Date.now()): DemoState {
       status: resolved ? 'Resolved' : 'Open',
       ownerId: owner,
       category: t.category,
-      priority: t.category === 'Emergency' ? 'Critical' : t.sentiment === 'Negative' && i % 2 === 0 ? 'High' : 'Normal',
       sentiment: t.sentiment,
       ai: { score, confidence: 0.62 + Math.round(r() * 30) / 100, category: t.category, source: 'Simulated classifier, not a live model' },
       notes: [],

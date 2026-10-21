@@ -8,18 +8,19 @@ Parallel work limit: 1
 
 - 2026-10-21: "Build the UI interaction mockup first." Backend work waits. The rebuild uses the frontend part of ADR 0001 (React + Vite SPA with a mock adapter) in `web/`. The v0 prototype stays as the reference.
 - 2026-10-21: Review **section by section**. The agent builds one menu section, reports, and stops for comments before starting the next.
+- 2026-10-21 (§ 1 R1): role-based demo permissions are the default; SOC keyword click keeps searching the inbox; the inbox is sentiment based, not ticket based (no priority).
 
 ## Current task
 
 | Work-item ID | Work | State | Owner |
 | --- | --- | --- | --- |
-| `MOCKUP-V1-REBUILD` § 1 | App shell + Engagement (SOC, Inbox & Comments, Social Listening). Report: `docs/work-items/MOCKUP-V1-ENGAGEMENT/BUILD-REPORT.md` | `BUILT_AWAITING_REVIEW` | Claude |
+| `MOCKUP-V1-REBUILD` § 2 | Social Channels & Content. Plan proposed, waiting for Director go-ahead | `WAITING_FOR_DIRECTOR` | Claude |
 
 ## Rebuild sections (review one at a time)
 
 | § | Section | Screens | State |
 | ---: | --- | --- | --- |
-| 1 | Shell + Engagement | SOC, Inbox & Comments, Social Listening | `BUILT_AWAITING_REVIEW` |
+| 1 | Shell + Engagement | SOC, Inbox & Comments, Social Listening | R1 answers applied (priority removed, sentiment-first inbox) |
 | 2 | Social Channels & Content | Social Channels, All Content (composer, approvals), Publishing Calendar (month/week grid), Media Storage, Asset Groups (brand direction, voice, people) | `QUEUED` |
 | 3 | Advertising | Campaign draft with simulated budget and no-spend guard | `QUEUED` |
 | 4 | Insights | Analytics & Reports with SAMPLE-watermarked CSV/PDF export | `QUEUED` |

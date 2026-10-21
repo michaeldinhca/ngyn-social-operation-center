@@ -86,13 +86,16 @@ const server = http.createServer((req, res) => {
     await page.waitForTimeout(800)
     check('negative conversation opens in inbox', (await page.locator('[aria-label="Conversation detail"] h2').count()) === 1)
     await shot('inbox-open')
+    check('inbox has no ticket-style priority', (await page.getByText(/priority|critical/i).count()) === 0)
+    const firstBadges = await page.locator('[aria-label="Conversations"] li').first().innerText()
+    check('inbox sorts most negative first by default', firstBadges.includes('Negative'), firstBadges.split('\n').slice(-3).join(' '))
 
     // Assign, note, suggest, resolve.
     const ownerSelect = page.locator('[aria-label="Routing and classification"] select').first()
     const options = await ownerSelect.locator('option:not([disabled])').evaluateAll((o) => o.map((x) => x.value).filter(Boolean))
     check('owner list offers eligible responders', options.length > 0, `${options.length} eligible`)
     await ownerSelect.selectOption(options[0])
-    await page.click('button:has-text("Save owner & classification")')
+    await page.click('button:has-text("Save owner & sentiment")')
     await page.waitForTimeout(500)
     await page.fill('textarea[placeholder^="Write a reply"]', '')
     await page.click('button:has-text("Mock AI suggestion")')

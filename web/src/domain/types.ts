@@ -91,7 +91,6 @@ export interface Post {
 }
 
 export type Sentiment = 'Negative' | 'Concerned' | 'Neutral' | 'Positive'
-export type Priority = 'Normal' | 'High' | 'Critical'
 export type Category = 'Roads' | 'Transit' | 'Recreation' | 'Permits' | 'Waste' | 'Emergency' | 'General'
 export const CATEGORIES: Category[] = ['Roads', 'Transit', 'Recreation', 'Permits', 'Waste', 'Emergency', 'General']
 
@@ -122,7 +121,6 @@ export interface Conversation {
   status: 'Open' | 'Resolved'
   ownerId: string | null
   category: Category
-  priority: Priority
   /** Staff-set sentiment. Starts from the simulated classifier and can be overridden. */
   sentiment: Sentiment
   ai: { score: number | null; confidence: number; category: Category; source: string }

@@ -14,7 +14,6 @@ import {
   type ListeningAlert,
   type Network,
   type Post,
-  type Priority,
   type Sentiment,
   type SocialAccount,
   type User,
@@ -276,7 +275,6 @@ export function nextDemoUpdate(actorId: string): Promise<string> {
       status: 'Open',
       ownerId: null,
       category: 'Transit',
-      priority: 'High',
       sentiment: 'Negative',
       ai: { score: -88, confidence: 0.86, category: 'Transit', source: 'Simulated classifier, not a live model' },
       notes: [],
@@ -337,6 +335,15 @@ export interface InboxFilters {
   owner: string
   status: 'Open' | 'Resolved' | 'All'
   search: string
+  /** Sentiment-first triage: most negative simulated score first, or newest first. */
+  sort: 'negative' | 'newest'
+}
+
+const SENTIMENT_ORDER: Record<Sentiment, number> = { Negative: -75, Concerned: -40, Neutral: 0, Positive: 60 }
+
+/** Staff-set sentiment wins over the simulated score; unscored items sort by their staff label. */
+function sentimentRank(x: Conversation) {
+  return x.sentiment === 'Negative' || x.sentiment === 'Concerned' ? Math.min(x.ai.score ?? SENTIMENT_ORDER[x.sentiment], SENTIMENT_ORDER[x.sentiment]) : SENTIMENT_ORDER[x.sentiment]
 }
 
 export type ConversationRow = Conversation & { account: SocialAccount; ownerName: string | null }
@@ -357,7 +364,7 @@ export function listConversations(actorId: string, f: InboxFilters): Promise<{ r
     .filter((x) => f.owner === 'All' || (f.owner === 'Unassigned' ? !x.ownerId : x.ownerId === f.owner))
     .filter((x) => f.status === 'All' || x.status === f.status)
     .filter((x) => !q || (x.id + ' ' + x.author + ' ' + x.thread.map((m) => m.text).join(' ')).toLowerCase().includes(q))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .sort((a, b) => (f.sort === 'negative' ? sentimentRank(a) - sentimentRank(b) : 0) || b.createdAt.localeCompare(a.createdAt))
     .map((x) => ({ ...x, account: byId.get(x.accountId)!, ownerName: s.users.find((u) => u.id === x.ownerId)?.name ?? null }))
   const hasChannels = actor.isAdmin || s.accounts.some((a) => hasAccountFunction(actor, 'inbox.respond', a.id, c))
   return wait({ rows, hasChannels })
@@ -392,7 +399,7 @@ export function getConversation(actorId: string, id: string): Promise<Conversati
   })
 }
 
-export function updateRouting(actorId: string, id: string, patch: { ownerId: string | null; sentiment: Sentiment; priority: Priority; category: Category }) {
+export function updateRouting(actorId: string, id: string, patch: { ownerId: string | null; sentiment: Sentiment; category: Category }) {
   const s = db()
   const x = loadConversation(s, actorId, id)
   if (patch.ownerId) {
@@ -404,7 +411,6 @@ export function updateRouting(actorId: string, id: string, patch: { ownerId: str
   const changes: string[] = []
   if (patch.ownerId !== x.ownerId) changes.push(`owner → ${s.users.find((u) => u.id === patch.ownerId)?.name ?? 'Unassigned'}`)
   if (patch.sentiment !== x.sentiment) changes.push(`sentiment → ${patch.sentiment} (staff override)`)
-  if (patch.priority !== x.priority) changes.push(`priority → ${patch.priority}`)
   if (patch.category !== x.category) changes.push(`category → ${patch.category}`)
   Object.assign(x, patch)
   if (changes.length) audit(s, actorId, 'Conversation routing saved', `${x.id}: ${changes.join(', ')}`)

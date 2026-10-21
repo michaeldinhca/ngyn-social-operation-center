@@ -87,3 +87,11 @@
 1. Is the role-based seed (change 1) the right default for demos?
 2. Should keyword clicks search the inbox (current), or open Social Listening?
 3. Inbox priority (Normal/High/Critical) is kept from v0. Keep it, given that SOC deliberately has no ticket metrics?
+
+## Director review (R1, 2026-10-21)
+
+| # | Question | Decision | Disposition |
+| ---: | --- | --- | --- |
+| 1 | Role-based demo permissions as the default | Yes | Kept |
+| 2 | Keyword click searches the inbox or opens Listening | Leave it (inbox) | Kept |
+| 3 | Keep Normal/High/Critical priority in the inbox | No: the inbox is sentiment based, not ticket based | **Removed** priority from the data model, filters, list badges and routing panel. The inbox now sorts **most negative first** by default (newest-first is an option), and the header counts negative conversations instead of critical ones. The dry-run checks both (31/31). |

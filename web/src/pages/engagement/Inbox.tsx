@@ -8,12 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Badge, Card, EmptyState, Field, Input, PageHeader, Select, SimBadge, Skeleton, Textarea } from '@/components/ui/primitives'
 import { Tooltip } from '@/components/ui/tooltip'
-import { CATEGORIES, NETWORKS, type Category, type Network, type Priority, type Sentiment } from '@/domain/types'
+import { CATEGORIES, NETWORKS, type Category, type Network, type Sentiment } from '@/domain/types'
 import { cn, formatDateTime, relativeTime, signed } from '@/lib/utils'
 import * as api from '@/mock/api'
 
 const SENTIMENTS: Sentiment[] = ['Negative', 'Concerned', 'Neutral', 'Positive']
-const PRIORITIES: Priority[] = ['Normal', 'High', 'Critical']
 
 // What each network allows for owned-account conversations, per Zernio's public docs.
 // Not verified by NGYN: see docs/PLATFORM_CAPABILITY_MATRIX.md.
@@ -40,6 +39,7 @@ export function InboxPage() {
     owner: 'All',
     status: search.c ? 'All' : 'Open',
     search: search.q ?? '',
+    sort: 'negative',
   }))
   const [selected, setSelected] = useState<string | null>(search.c ?? null)
   const [mobileDetail, setMobileDetail] = useState(!!search.c)
@@ -63,7 +63,7 @@ export function InboxPage() {
 
   const counts = useMemo(() => {
     const r = rows ?? []
-    return { total: r.length, unassigned: r.filter((x) => !x.ownerId && x.status === 'Open').length, critical: r.filter((x) => x.priority === 'Critical' && x.status === 'Open').length }
+    return { total: r.length, unassigned: r.filter((x) => !x.ownerId && x.status === 'Open').length, negative: r.filter((x) => x.sentiment === 'Negative' && x.status === 'Open').length }
   }, [rows])
 
   if (list.error) {
@@ -85,7 +85,7 @@ export function InboxPage() {
         actions={<SimBadge>Fictional conversations · no replies sent</SimBadge>}
       />
 
-      <Card className="mb-4 grid grid-cols-2 gap-3 p-4 md:grid-cols-4 xl:grid-cols-7">
+      <Card className="mb-4 grid grid-cols-2 gap-3 p-4 md:grid-cols-4 xl:grid-cols-5">
         <Field label="Network">
           {(id) => (
             <Select id={id} value={filters.network} onChange={(e) => set('network', e.target.value as Network | 'All')}>
@@ -149,7 +149,15 @@ export function InboxPage() {
             </Select>
           )}
         </Field>
-        <Field label="Search" className="col-span-2 md:col-span-2 xl:col-span-1">
+        <Field label="Sort">
+          {(id) => (
+            <Select id={id} value={filters.sort} onChange={(e) => set('sort', e.target.value as api.InboxFilters['sort'])}>
+              <option value="negative">Most negative first</option>
+              <option value="newest">Newest first</option>
+            </Select>
+          )}
+        </Field>
+        <Field label="Search" className="col-span-2 md:col-span-4 xl:col-span-2">
           {(id) => (
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
@@ -169,7 +177,7 @@ export function InboxPage() {
             <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[0.8125rem] text-muted">
               <span className="font-medium text-text-2">{counts.total} conversations</span>
               <span>{counts.unassigned} unassigned</span>
-              <span>{counts.critical} critical</span>
+              <span>{counts.negative} negative</span>
             </div>
             {!rows ? (
               <Skeleton className="h-96" />
@@ -192,7 +200,6 @@ export function InboxPage() {
                       </span>
                       <span className="mt-2 line-clamp-2 block text-[0.9375rem] leading-snug">{x.thread[x.thread.length - 1].text}</span>
                       <span className="mt-2 flex flex-wrap items-center gap-1.5">
-                        {x.priority !== 'Normal' && <Badge tone={x.priority === 'Critical' ? 'bad' : 'warn'}>{x.priority}</Badge>}
                         <Badge tone={sentimentTone(x.sentiment)}>{x.sentiment}</Badge>
                         <Badge>{x.category}</Badge>
                         {x.status === 'Resolved' && <Badge tone="good">Resolved</Badge>}
@@ -220,7 +227,7 @@ export function InboxPage() {
 
 function ConversationPanel({ id }: { id: string }) {
   const q = useConversation(id)
-  const [routing, setRouting] = useState<{ ownerId: string | null; sentiment: Sentiment; priority: Priority; category: Category } | null>(null)
+  const [routing, setRouting] = useState<{ ownerId: string | null; sentiment: Sentiment; category: Category } | null>(null)
   const [note, setNote] = useState('')
   const [reply, setReply] = useState('')
   const [suggestion, setSuggestion] = useState<{ confidence: number; basis: string } | null>(null)
@@ -235,7 +242,7 @@ function ConversationPanel({ id }: { id: string }) {
   const c = q.data?.conversation
   useEffect(() => {
     if (!c) return
-    setRouting({ ownerId: c.ownerId, sentiment: c.sentiment, priority: c.priority, category: c.category })
+    setRouting({ ownerId: c.ownerId, sentiment: c.sentiment, category: c.category })
     setReply(c.replyDraft)
     setSuggestion(null)
     setNote('')
@@ -244,7 +251,7 @@ function ConversationPanel({ id }: { id: string }) {
 
   if (!q.data || !c || !routing) return <Skeleton className="h-[36rem]" />
   const { post, eligibleOwners } = q.data
-  const dirty = routing.ownerId !== c.ownerId || routing.sentiment !== c.sentiment || routing.priority !== c.priority || routing.category !== c.category
+  const dirty = routing.ownerId !== c.ownerId || routing.sentiment !== c.sentiment || routing.category !== c.category
   const resolved = c.status === 'Resolved'
 
   return (
@@ -405,17 +412,8 @@ function ConversationPanel({ id }: { id: string }) {
               </Select>
             )}
           </Field>
-          <Field label="Priority" hint="Critical reports need verification before action.">
-            {(fid) => (
-              <Select id={fid} value={routing.priority} onChange={(e) => setRouting({ ...routing, priority: e.target.value as Priority })}>
-                {PRIORITIES.map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </Select>
-            )}
-          </Field>
           <Button variant={dirty ? 'primary' : 'secondary'} className="w-full" disabled={!dirty || saveRouting.isPending} onClick={() => saveRouting.mutate([c.id, routing])}>
-            Save owner & classification
+            Save owner & sentiment
           </Button>
         </aside>
       </div>
