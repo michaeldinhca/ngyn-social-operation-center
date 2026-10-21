@@ -47,7 +47,13 @@ These come from the handoff and the Product Director. Don't change them without 
 9. **Accessibility.** WCAG-aligned work is expected, but never claim AODA/WCAG compliance or certification. Personal display preferences live under My Preferences only.
 10. **Copy style.** No em dashes or en dashes in UI or marketing copy.
 
-## Engineering rules for the current prototype
+## Engineering rules for mockup v1 (`web/`)
+
+- Screens call `src/api/hooks.ts` only. Permission checks live in `src/mock/api.ts` at each action, mirroring a real backend, and use `src/domain/permissions.ts`.
+- Every change runs `npm run typecheck`, `npm test` and `npm run build && npm run dry-run` in `web/`. Add a dry-run step for each new interaction.
+- The rebuild is reviewed one menu section at a time (see `NEXT-WORK.md`). Don't start the next section before the current one is reviewed.
+
+## Engineering rules for prototype v0
 
 - `source/dist/` is the editable source. `NGYN_Municipal_Social_Platform.html` at the root is a **build output**; regenerate it with `npm run build`, never hand-edit it.
 - Script and stylesheet order in `source/dist/index.html` is load-bearing: later files reassign globals defined by earlier ones. Don't merge scripts into one block or reorder them without a refactor task.
@@ -77,6 +83,8 @@ For each work item, create `docs/work-items/<ID>/BUILD-REPORT.md` with: scope im
 | `docs/PLATFORM_CAPABILITY_MATRIX.md` | Evidence-backed per-platform capability status |
 | `docs/dry-runs/` | Dated browser dry-run reports |
 | `docs/handoff/` | Original Codex handoff and build brief (reference, read-only) |
-| `source/dist/` | Prototype source (HTML/CSS/JS) |
+| `web/` | **Mockup v1** (React + Vite). All new UI work goes here; see `web/README.md` |
+| `docs/work-items/` | Build reports per work item and review section |
+| `source/dist/` | Prototype v0 source (HTML/CSS/JS), kept as reference |
 | `source/tests/` | Unit tests (`node --test`) and `e2e/dry-run.cjs` |
 | `NGYN_Municipal_Social_Platform.html` | Built single-file mockup |

@@ -1,0 +1,155 @@
+@import 'tailwindcss';
+
+/* NGYN tokens. Dark (charcoal + lime) is the default; light is opt-in per user. */
+:root {
+  color-scheme: dark;
+  --bg: #151813;
+  --surface: #1b1f18;
+  --surface-2: #232820;
+  --surface-3: #2c3228;
+  --border: #343b30;
+  --border-strong: #4a5243;
+  --text: #eef2e8;
+  --text-2: #c3cab8;
+  --muted: #9aa38f;
+  --accent: #d0fc70;
+  --accent-ink: #151813;
+  --accent-strong: #d0fc70;
+  --accent-soft: rgb(208 252 112 / 0.12);
+  --good: #6fd36f;
+  --good-soft: rgb(12 163 12 / 0.16);
+  --warn: #f5c04d;
+  --warn-soft: rgb(250 178 25 / 0.14);
+  --bad: #f07a7a;
+  --bad-soft: rgb(208 59 59 / 0.18);
+  --danger: #c43c32;
+  --info: #7fb2f0;
+  --info-soft: rgb(57 135 229 / 0.16);
+  --chart-line: #d0fc70;
+  --chart-neg: #e66767;
+  --chart-pos: #3987e5;
+  --chart-mid: #4a4a46;
+  --focus: #d0fc70;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  --font-scale: 1;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f4f5f0;
+  --surface: #ffffff;
+  --surface-2: #f2f4ee;
+  --surface-3: #e8ebe2;
+  --border: #dde1d5;
+  --border-strong: #c3c9b8;
+  --text: #151813;
+  --text-2: #3c4436;
+  --muted: #5d6654;
+  --accent: #d0fc70;
+  --accent-ink: #151813;
+  --accent-strong: #4f7a12;
+  --accent-soft: rgb(79 122 18 / 0.1);
+  --good: #11730f;
+  --good-soft: rgb(12 163 12 / 0.12);
+  --warn: #8a5a00;
+  --warn-soft: rgb(250 178 25 / 0.2);
+  --bad: #b3261e;
+  --bad-soft: rgb(208 59 59 / 0.12);
+  --danger: #b3261e;
+  --info: #1c5cab;
+  --info-soft: rgb(42 120 214 / 0.12);
+  --chart-line: #4f7a12;
+  --chart-neg: #d03b3b;
+  --chart-pos: #2a78d6;
+  --chart-mid: #c9c8c2;
+  --focus: #1c5cab;
+  --shadow: 0 1px 2px rgb(21 24 19 / 0.08);
+}
+
+:root.high-contrast {
+  --border: #6b7562;
+  --border-strong: #8d9883;
+  --text-2: var(--text);
+  --muted: var(--text-2);
+}
+:root[data-theme='light'].high-contrast {
+  --border: #8d9883;
+  --muted: #2f362a;
+}
+
+:root[data-text-size='large'] {
+  --font-scale: 1.1;
+}
+:root[data-text-size='extra-large'] {
+  --font-scale: 1.22;
+}
+
+:root.reduce-motion *,
+:root.reduce-motion *::before,
+:root.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html {
+  font-size: calc(15px * var(--font-scale));
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+:root.strong-focus :focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgb(208 252 112 / 0.25);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa38f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  padding-right: 2rem !important;
+}
