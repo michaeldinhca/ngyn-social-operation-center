@@ -8,6 +8,8 @@ import { SocPage } from '@/pages/engagement/Soc'
 import { InboxPage } from '@/pages/engagement/Inbox'
 import { ListeningPage } from '@/pages/engagement/Listening'
 import { PendingSection } from '@/pages/PendingSection'
+import { ChannelsPage } from '@/pages/channels/Channels'
+import { AssetGroupsPage } from '@/pages/channels/AssetGroups'
 
 export interface PageSearch {
   c?: string
@@ -15,6 +17,8 @@ export interface PageSearch {
   q?: string
   sentiment?: string
   network?: string
+  group?: string
+  tab?: string
 }
 
 const rootRoute = createRootRoute({ component: Shell })
@@ -26,7 +30,7 @@ const pageRoute = createRoute({
   path: '$page',
   validateSearch: (search: Record<string, unknown>): PageSearch => {
     const pick = (k: string) => (typeof search[k] === 'string' && search[k] ? (search[k] as string) : undefined)
-    return { c: pick('c'), topic: pick('topic'), q: pick('q'), sentiment: pick('sentiment'), network: pick('network') }
+    return { c: pick('c'), topic: pick('topic'), q: pick('q'), sentiment: pick('sentiment'), network: pick('network'), group: pick('group'), tab: pick('tab') }
   },
   component: PageSwitch,
 })
@@ -51,6 +55,8 @@ function PageSwitch() {
   if (page === 'soc') return <SocPage />
   if (page === 'inbox') return <InboxPage />
   if (page === 'listening') return <ListeningPage />
+  if (page === 'channels') return <ChannelsPage />
+  if (page === 'assets') return <AssetGroupsPage />
   return <PendingSection item={item} />
 }
 

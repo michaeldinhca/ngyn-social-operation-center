@@ -14,7 +14,7 @@ export const SAMPLE_PHOTOS: SamplePhoto[] = [
   { image: 'photo-1558617320-e695f0d420de', author: 'Thomas Park', source: 'https://unsplash.com/photos/swimming-pool-close-up-photography-QGdRrty4054', alt: 'Clear blue swimming pool water over lane markings.' },
 ]
 
-export function photoUrl(index: number, width = 800): string {
+export function photoUrl(index: number, width = 800, height?: number): string {
   const p = SAMPLE_PHOTOS[index % SAMPLE_PHOTOS.length]
-  return `https://images.unsplash.com/${p.image}?auto=format&fit=crop&w=${width}&q=70`
+  return `https://images.unsplash.com/${p.image}?auto=format&fit=crop&w=${width}${height ? `&h=${height}` : ''}&q=70`
 }

@@ -1,4 +1,5 @@
 import type { DemoState } from '@/domain/types'
+import { connectionStatus } from '@/domain/connection'
 import { createSeed } from './seed'
 
 // Browser-local demo store. Everything lives in this browser only; nothing reaches a server.
@@ -11,7 +12,7 @@ function read(): DemoState | null {
     const raw = localStorage.getItem(KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as DemoState
-    return parsed.version === 1 ? parsed : null
+    return parsed.version === 2 ? parsed : null
   } catch {
     return null
   }
@@ -22,6 +23,8 @@ export function db(): DemoState {
     memory = read() ?? createSeed()
     persist()
   }
+  // Expiry moves with the clock, so health is recomputed on every read.
+  for (const a of memory.accounts) a.connection.status = connectionStatus(a)
   return memory
 }
 

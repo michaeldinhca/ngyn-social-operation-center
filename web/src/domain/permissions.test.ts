@@ -30,7 +30,7 @@ const ctx = (groups: AssetGroup[] = []): AccessContext => ({
   groups,
 })
 
-const group = (id: string, assignments: AssetGroup['assignments']): AssetGroup => ({ id, name: id, color: '#000', voice: '', assignments })
+const group = (id: string, assignments: AssetGroup['assignments']): AssetGroup => ({ id, name: id, color: '#000', description: '', assignments, brand: {} as AssetGroup['brand'], createdAt: '' })
 
 describe('permissions', () => {
   it('requires both the function and the account assignment', () => {

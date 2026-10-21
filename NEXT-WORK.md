@@ -8,20 +8,23 @@ Parallel work limit: 1
 
 - 2026-10-21: "Build the UI interaction mockup first." Backend work waits. The rebuild uses the frontend part of ADR 0001 (React + Vite SPA with a mock adapter) in `web/`. The v0 prototype stays as the reference.
 - 2026-10-21: Review **section by section**. The agent builds one menu section, reports, and stops for comments before starting the next.
+- 2026-10-21: § 2 is reviewed in three stops (2a, 2b, 2c), as proposed and approved ("do it").
 - 2026-10-21 (§ 1 R1): role-based demo permissions are the default; SOC keyword click keeps searching the inbox; the inbox is sentiment based, not ticket based (no priority).
 
 ## Current task
 
 | Work-item ID | Work | State | Owner |
 | --- | --- | --- | --- |
-| `MOCKUP-V1-REBUILD` § 2 | Social Channels & Content. Plan proposed, waiting for Director go-ahead | `WAITING_FOR_DIRECTOR` | Claude |
+| `MOCKUP-V1-REBUILD` § 2a | Social Channels + Asset Groups. Report: `docs/work-items/MOCKUP-V1-CHANNELS-GROUPS/BUILD-REPORT.md` | `BUILT_AWAITING_REVIEW` | Claude |
 
 ## Rebuild sections (review one at a time)
 
 | § | Section | Screens | State |
 | ---: | --- | --- | --- |
 | 1 | Shell + Engagement | SOC, Inbox & Comments, Social Listening | R1 answers applied (priority removed, sentiment-first inbox) |
-| 2 | Social Channels & Content | Social Channels, All Content (composer, approvals), Publishing Calendar (month/week grid), Media Storage, Asset Groups (brand direction, voice, people) | `QUEUED` |
+| 2a | Social Channels + Asset Groups | Connections, capabilities, linking, group roles, brand direction, brand voices, delete | `BUILT_AWAITING_REVIEW` |
+| 2b | All Content + Composer + Publishing Calendar | Approval workflow, per-network composer, month/week calendar with reschedule | `QUEUED` |
+| 2c | Media Storage | Library, IndexedDB uploads, review, versions, trash, composer reuse | `QUEUED` |
 | 3 | Advertising | Campaign draft with simulated budget and no-spend guard | `QUEUED` |
 | 4 | Insights | Analytics & Reports with SAMPLE-watermarked CSV/PDF export | `QUEUED` |
 | 5 | Settings | Users & Access, Activity Log, My Preferences | `QUEUED` |
@@ -42,6 +45,6 @@ Parallel work limit: 1
 ## Latest handoff
 
 - Next actor: Product Director
-- Required action: review § 1 (run `cd web && npm install && npm run dev`, or approve publishing it for comments), answer the 3 questions in the build report.
-- Evidence: typecheck clean, 7/7 unit, 29/29 browser dry-run, screenshots in `.dry-run/web/`.
-- Stop condition: § 2 does not start until § 1 comments are addressed or accepted.
+- Required action: review § 2a and answer the 2 questions in its build report.
+- Evidence: typecheck clean, 12/12 unit, 61/61 browser dry-run, screenshots in `.dry-run/web/`.
+- Stop condition: § 2b does not start until § 2a comments are addressed or accepted.

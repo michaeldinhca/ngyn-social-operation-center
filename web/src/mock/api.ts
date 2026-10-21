@@ -1,10 +1,4 @@
-import {
-  canViewAccount,
-  hasAccountFunction,
-  hasFunction,
-  type AccessContext,
-  type Actor,
-} from '@/domain/permissions'
+import { canViewAccount, hasAccountFunction, hasFunction } from '@/domain/permissions'
 import {
   ADMIN_ID,
   type Category,
@@ -24,35 +18,8 @@ import { db, persist, resetDemo as reset } from './db'
 // enforces permissions at the action boundary, mutates the browser store and returns
 // plain data. No network, social platform or AI model is ever called.
 
-export class ApiError extends Error {}
-
-const LATENCY = 90
-// Responses are deep copies, like JSON from a server, so screens never hold live store objects.
-const wait = <T,>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value === undefined ? value : structuredClone(value)), LATENCY))
-const nowISO = () => new Date().toISOString()
-const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 9)}`
-
-function ctx(s: DemoState): AccessContext {
-  return { groups: s.groups, accounts: s.accounts }
-}
-
-function actorOf(s: DemoState, actorId: string): Actor {
-  if (actorId === ADMIN_ID) return { isAdmin: true, user: null }
-  const user = s.users.find((u) => u.id === actorId) ?? null
-  return { isAdmin: user?.role === 'Administrator' && user.status === 'Active', user }
-}
-
-function actorName(s: DemoState, actorId: string) {
-  return actorId === ADMIN_ID ? 'Demo administrator' : (s.users.find((u) => u.id === actorId)?.name ?? 'Unknown user')
-}
-
-function audit(s: DemoState, actorId: string, action: string, detail: string) {
-  s.audit.unshift({ id: uid('audit'), at: nowISO(), actor: actorName(s, actorId), action, detail })
-}
-
-function requireAdmin(s: DemoState, actorId: string) {
-  if (!actorOf(s, actorId).isAdmin) throw new ApiError('Only an administrator can do this.')
-}
+export { ApiError } from './core'
+import { actorName, actorOf, ApiError, audit, ctx, nowISO, requireAdmin, uid, wait } from './core'
 
 // ---------- Session ----------
 
@@ -68,7 +35,7 @@ export interface SessionInfo {
   seededAt: string
 }
 
-const ALL_FUNCTIONS: FunctionId[] = ['content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add']
+const ALL_FUNCTIONS: FunctionId[] = ['content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete']
 
 export function getSession(actorId: string): Promise<SessionInfo> {
   const s = db()

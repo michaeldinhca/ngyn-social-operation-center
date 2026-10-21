@@ -17,6 +17,9 @@ export type FunctionId =
   | 'ads.create'
   | 'ads.manage'
   | 'ads.accounts.add'
+  | 'channels.manage'
+  | 'assets.manage'
+  | 'assets.delete'
 
 export interface User {
   id: string
@@ -55,12 +58,99 @@ export interface GroupAssignment {
   adAccountIds: string[]
 }
 
+export interface Review {
+  by: string
+  at: string
+}
+
+export interface BrandLogo {
+  id: string
+  name: string
+  /** data: URL. Seed logos are generated SVG marks; uploads stay in this browser. */
+  image: string
+}
+
+/** Sample working canvases, not verified platform requirements. */
+export const CANVASES: { label: string; width: number; height: number }[] = [
+  { label: 'Square', width: 1080, height: 1080 },
+  { label: 'Portrait', width: 1080, height: 1350 },
+  { label: 'Tall portrait', width: 1080, height: 1440 },
+  { label: 'Vertical', width: 1080, height: 1920 },
+  { label: 'Landscape', width: 1200, height: 630 },
+  { label: 'Widescreen', width: 1920, height: 1080 },
+]
+
+export interface VisualReference {
+  id: string
+  canvas: string
+  width: number
+  height: number
+  photo: number
+  note: string
+}
+
+export interface MasterDirection {
+  name: string
+  logos: BrandLogo[]
+  /** Exactly two or three hex colours. */
+  palette: string[]
+  headingFont: string
+  bodyFont: string
+  voice: string
+  mood: string
+  tone: string
+  dos: string[]
+  donts: string[]
+  updatedAt: string
+  updatedBy: string
+}
+
+export interface GuidelineSet {
+  id: string
+  name: string
+  purpose: string
+  voice: string
+  voiceId: string | null
+  dos: string[]
+  donts: string[]
+  visuals: VisualReference[]
+  reviewed: Review | null
+}
+
+export interface BrandVoice {
+  id: string
+  name: string
+  method: 'website' | 'description'
+  source: string
+  context: string
+  voice: string
+  mood: string
+  tone: string
+  audience: string
+  reviewed: Review | null
+  createdAt: string
+}
+
+export interface BrandPackage {
+  master: MasterDirection
+  sets: GuidelineSet[]
+  voices: BrandVoice[]
+}
+
 export interface AssetGroup {
   id: string
   name: string
   color: string
-  voice: string
+  description: string
   assignments: GroupAssignment[]
+  brand: BrandPackage
+  createdAt: string
+}
+
+export interface ArchivedGroup extends AssetGroup {
+  archivedAt: string
+  archivedBy: string
+  unlinkedChannelIds: string[]
 }
 
 export type PostStatus = 'Draft' | 'In review' | 'Approved' | 'Scheduled' | 'Published' | 'Failed'
@@ -186,11 +276,12 @@ export interface EmergencyState {
 }
 
 export interface DemoState {
-  version: 1
+  version: 2
   seededAt: string
   users: User[]
   accounts: SocialAccount[]
   groups: AssetGroup[]
+  archivedGroups: ArchivedGroup[]
   posts: Post[]
   conversations: Conversation[]
   topics: ListeningTopic[]

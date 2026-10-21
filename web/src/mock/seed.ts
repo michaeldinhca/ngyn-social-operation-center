@@ -17,6 +17,7 @@ import type {
   StaffRole,
   User,
 } from '@/domain/types'
+import { defaultBrand } from './brand-seed'
 
 // Deterministic fictional seed. Every name, handle, message and metric here is invented.
 // Counts follow the brief: 18 accounts, 30 staff, 80 conversations, 42 posts.
@@ -35,7 +36,7 @@ function rng(seed: number) {
 const DEPARTMENTS: Department[] = ['Communications', 'Public Works', 'Transit', 'Recreation', 'Customer Service', 'IT']
 
 const ROLE_FUNCTIONS: Record<StaffRole, FunctionId[]> = {
-  Administrator: ['content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add'],
+  Administrator: ['content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete'],
   Approver: ['content.create', 'content.approve', 'content.publish', 'reports.view'],
   Editor: ['content.create'],
   Responder: ['inbox.respond'],
@@ -240,6 +241,9 @@ export function createSeed(now = Date.now()): DemoState {
     // Deliberate access edge cases for "View as user" testing.
     if (id === 'user-5') channels = [] // new IT viewer, no channels assigned yet
     if (id === 'user-22') channels = [...deptAccounts('Customer Service'), ...deptAccounts('Communications')] // 311 responder covers main accounts
+    const extra: FunctionId[] = []
+    if (id === 'user-18') extra.push('assets.manage') // Communications approver also manages that brand
+    if (id === 'user-11') extra.push('channels.manage') // IT editor looks after IT connections
     return {
       id,
       name,
@@ -247,7 +251,7 @@ export function createSeed(now = Date.now()): DemoState {
       department,
       role,
       status: id === 'user-10' ? 'Invited' : 'Active',
-      functions: [...ROLE_FUNCTIONS[role]],
+      functions: [...ROLE_FUNCTIONS[role], ...extra],
       channels,
       adAccounts: [],
     }
@@ -257,8 +261,10 @@ export function createSeed(now = Date.now()): DemoState {
     id: `asset-${i}`,
     name: `Harbourview ${d}`,
     color: GROUP_COLORS[i],
-    voice: i === 0 ? 'Clear, approachable, calm and inclusive. Use plain language.' : 'Helpful, practical and respectful. Explain services clearly.',
+    description: `Channels and brand direction for ${d}.`,
     assignments: [],
+    brand: defaultBrand(d, GROUP_COLORS[i], iso(now - 9 * day), i),
+    createdAt: iso(now - 60 * day),
   }))
   // Lily Green (Recreation editor) also creates for two Communications channels through a group role only.
   groups[0].assignments.push({ userId: 'user-21', role: 'creator', channelIds: ['social-0', 'social-6'], adAccountIds: [] })
@@ -366,11 +372,12 @@ export function createSeed(now = Date.now()): DemoState {
   ]
 
   return {
-    version: 1,
+    version: 2,
     seededAt: iso(now),
     users,
     accounts,
     groups,
+    archivedGroups: [],
     posts,
     conversations,
     topics,

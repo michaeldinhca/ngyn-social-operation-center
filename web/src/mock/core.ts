@@ -1,0 +1,35 @@
+import type { AccessContext, Actor } from '@/domain/permissions'
+import { ADMIN_ID, type DemoState } from '@/domain/types'
+
+// Shared helpers for the mock API modules.
+
+export class ApiError extends Error {}
+
+export const LATENCY = 90
+// Responses are deep copies, like JSON from a server, so screens never hold live store objects.
+export const wait = <T,>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value === undefined ? value : structuredClone(value)), LATENCY))
+export const nowISO = () => new Date().toISOString()
+export const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 9)}`
+
+export function ctx(s: DemoState): AccessContext {
+  return { groups: s.groups, accounts: s.accounts }
+}
+
+export function actorOf(s: DemoState, actorId: string): Actor {
+  if (actorId === ADMIN_ID) return { isAdmin: true, user: null }
+  const user = s.users.find((u) => u.id === actorId) ?? null
+  return { isAdmin: user?.role === 'Administrator' && user.status === 'Active', user }
+}
+
+export function actorName(s: DemoState, actorId: string) {
+  return actorId === ADMIN_ID ? 'Demo administrator' : (s.users.find((u) => u.id === actorId)?.name ?? 'Unknown user')
+}
+
+export function audit(s: DemoState, actorId: string, action: string, detail: string) {
+  s.audit.unshift({ id: uid('audit'), at: nowISO(), actor: actorName(s, actorId), action, detail })
+}
+
+export function requireAdmin(s: DemoState, actorId: string) {
+  if (!actorOf(s, actorId).isAdmin) throw new ApiError('Only an administrator can do this.')
+}
+
