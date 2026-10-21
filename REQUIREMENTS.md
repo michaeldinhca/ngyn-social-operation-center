@@ -18,9 +18,9 @@ Status as of 2026-10-21 (dry-run `docs/dry-runs/2026-10-21.md`).
 | F01 | Social accounts: 8 Facebook, 2 Instagram, 6 Bluesky, 1 LinkedIn, 1 YouTube, optional X; each shows capabilities, expiry, errors, sync health | Done | Independent channels, mock token expiry and reauthorization. Capability detail per account is thin. |
 | F02 | 30+ users; admin, approver, editor, responder, analyst, viewer; account/department/action-level permissions | Done | Function grants + account assignments + group roles. Department-level scoping is not modelled. |
 | F03 | Identity and audit: unique auth, sessions, MFA, attribution | Partial | "View as user" impersonation only (no login). Activity log exists but is mutable browser data. |
-| F04 | Content calendar: monthly view, calendar/list switch, filters, queue inspection | Partial | Calendar reuses the filtered content card view. **No month grid yet.** |
-| F05 | Composer and scheduling: text/photo/video per channel, adaptations, preview, ALT, timezone-safe scheduling | Partial | Single-post composer with per-network variations and previews. No video upload. Character limits unverified. |
-| F06 | Approvals: Draft, Submit, Review, Approve/Reject, Schedule; history; non-approvers blocked | Done | Single-step approval. Multi-step department review not modelled. |
+| F04 | Content calendar: monthly view, calendar/list switch, filters, queue inspection | Done (v1) | Month, week and list views in Halifax time, network and status filters, drag to reschedule, "Needs scheduling" panel, pause lock. Rebuilt in `web/`. |
+| F05 | Composer and scheduling: text/photo/video per channel, adaptations, preview, ALT, timezone-safe scheduling | Done (v1), no video | Full-screen composer with shared or per-network captions, native-style previews, required ALT, approved media from Media Storage, mock AI draft, autosave. Scheduling is a separate step after approval. Video upload and verified character limits are not built. |
+| F06 | Approvals: Draft, Submit, Review, Approve/Reject, Schedule; history; non-approvers blocked | Done (v1) | Per-channel permissions on every step, return needs a note, history per post. Single-step approval; multi-step department review not modelled. |
 | F07 | Resident inbox: comments, posts, DMs, origin link, sync status | Done | Mock conversations only. Unsupported platform actions not yet surfaced per network. |
 | F08 | Assignment/case: owner, department, status, notes, reply drafting | Done | Lives in Inbox & Comments, not SOC (accepted direction). |
 | F09 | Reply workflow: draft, review, send only when API allows | Partial | Drafts and reviewed resolution. Sending is disabled by design. |
@@ -28,8 +28,8 @@ Status as of 2026-10-21 (dry-run `docs/dry-runs/2026-10-21.md`).
 | F11 | Reporting: dashboards, CSV/PDF export with SAMPLE watermark, data source and refresh time | Not started | |
 | F12 | Listening: keywords, topics, mentions, source coverage, alerts | Placeholder | Screen currently titled "Insights preview" (wrong heading). |
 | F13 | Mobile: inbox, approvals, alerts on phones | Partial | No horizontal scroll at 390px on SOC, Inbox, Content, Media. Phone task flows not reviewed. |
-| F14 | Media library: metadata, tags, search, versions, review, access control, reuse | Done | IndexedDB upload verified in browser 2026-10-21. Replace/download need more coverage. |
-| F15 | Accessibility: ALT per image, captions workflow, keyboard and screen reader testing | Partial | ALT required in composer. Captions workflow and screen reader testing not done. |
+| F14 | Media library: metadata, tags, search, versions, review, access control, reuse | Done (v1) | Folders, grid and list, filters, browser uploads, ALT-gated approval, replace with version history, trash and restore, channel scoping, reuse in the composer. Videos and PDFs store but have no preview. |
+| F15 | Accessibility: ALT per image, captions workflow, keyboard and screen reader testing | Partial | ALT required to submit a post and to approve media. Captions workflow and screen reader testing not done. |
 | F16 | Emergency pause: global pause, banner, audited reason, explicit resume | Done | Verified in dry-run. Notification to staff is mock only. |
 | F17 | Support/operations: diagnostics, onboarding, health | Not started | |
 | F18 | Advertising (P2): campaigns, spend, no-spend guard | Placeholder | Ad-manager role recordable; no ad accounts. |

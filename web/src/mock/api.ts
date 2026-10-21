@@ -12,6 +12,7 @@ import {
   type SocialAccount,
   type User,
 } from '@/domain/types'
+import { clearBlobs } from './blobs'
 import { db, persist, resetDemo as reset } from './db'
 
 // Mock API. Each function stands in for a future REST endpoint: it resolves the actor,
@@ -64,8 +65,9 @@ export function listAccounts(actorId: string): Promise<SocialAccount[]> {
   return wait(s.accounts.filter((a) => canViewAccount(actor, a.id, ctx(s))))
 }
 
-export function resetDemo(): Promise<void> {
+export async function resetDemo(): Promise<void> {
   reset()
+  await clearBlobs().catch(() => undefined)
   return wait(undefined)
 }
 
@@ -95,6 +97,8 @@ export function processNextPublication(actorId: string): Promise<string> {
   if (account.connection.status === 'Expired') {
     next.status = 'Failed'
     next.failureReason = 'Connection expired. Reauthorize the channel.'
+    next.publishedAt = nowISO()
+    next.history.push({ id: uid('ev'), at: nowISO(), actor: 'Demo queue', action: 'Failed', note: next.failureReason })
     audit(s, actorId, 'Demo publication blocked', `${next.title} on ${account.name}: connection expired`)
     persist()
     return wait(`Blocked: ${account.name} connection has expired.`)
@@ -102,6 +106,7 @@ export function processNextPublication(actorId: string): Promise<string> {
   next.status = 'Published'
   next.publishedAt = nowISO()
   next.metrics = { impressions: 0, engagements: 0, trend: 0, observedAt: nowISO() }
+  next.history.push({ id: uid('ev'), at: nowISO(), actor: 'Demo queue', action: 'Published', note: 'Simulated. Nothing was sent to a platform.' })
   audit(s, actorId, 'Demo publication processed', `${next.title} on ${account.name}. Nothing sent externally.`)
   persist()
   return wait(`Marked "${next.title}" as published in the demo. Nothing was sent.`)
@@ -272,6 +277,7 @@ export function nextDemoUpdate(actorId: string): Promise<string> {
       post.status = 'Failed'
       post.publishedAt = nowISO()
       post.failureReason = 'Mock provider delivery failure'
+      post.history.push({ id: uid('ev'), at: nowISO(), actor: 'Demo queue', action: 'Failed', note: post.failureReason })
       kind = 'failure'
       title = 'Mock publication failed'
       detail = `${post.title}: no platform was called.`

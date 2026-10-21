@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useAction, useSoc } from '@/api/hooks'
 import { DataTable, LineChart } from '@/components/charts/charts'
-import { ChannelAvatar, PostDialog } from '@/components/social'
+import { ChannelAvatar } from '@/components/social'
+import { PostDetailDialog } from '@/components/post/PostDetailDialog'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Badge, Card, CardHeader, EmptyState, Field, PageHeader, Segmented, Select, SimBadge, Skeleton, Textarea } from '@/components/ui/primitives'
@@ -320,7 +321,7 @@ export function SocPage() {
       )}
 
       <PauseDialog open={pauseOpen} onOpenChange={setPauseOpen} paused={paused} />
-      <PostDialog post={openPost} account={openPost?.account ?? null} open={!!openPost} onOpenChange={(o) => !o && setOpenPost(null)} />
+      <PostDetailDialog id={openPost?.id ?? null} onClose={() => setOpenPost(null)} />
     </>
   )
 }

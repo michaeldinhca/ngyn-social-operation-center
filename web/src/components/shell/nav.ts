@@ -57,9 +57,9 @@ export const NAV: { title: string; items: NavItem[] }[] = [
     title: 'Social Channels & Content',
     items: [
       { id: 'channels', label: 'Social Channels', title: 'Social Channels', icon: Link2, built: true, allowed: (s) => f(s)['channels.manage'] },
-      { id: 'content', label: 'All Content', title: 'All Content', icon: LayoutGrid, built: false, allowed: (s) => f(s)['content.create'] || f(s)['content.approve'] || f(s)['content.publish'] || f(s)['reports.view'] },
-      { id: 'calendar', label: 'Publishing Calendar', title: 'Publishing Calendar', icon: CalendarDays, built: false, allowed: (s) => f(s)['content.create'] || f(s)['content.publish'] },
-      { id: 'media', label: 'Media Storage', title: 'Media Storage', icon: Image, built: false, allowed: (s) => s.isAdmin || f(s)['content.create'] },
+      { id: 'content', label: 'All Content', title: 'All Content', icon: LayoutGrid, built: true, allowed: (s) => f(s)['content.create'] || f(s)['content.approve'] || f(s)['content.publish'] || f(s)['reports.view'] },
+      { id: 'calendar', label: 'Publishing Calendar', title: 'Publishing Calendar', icon: CalendarDays, built: true, allowed: (s) => f(s)['content.create'] || f(s)['content.publish'] },
+      { id: 'media', label: 'Media Storage', title: 'Media Storage', icon: Image, built: true, allowed: (s) => s.isAdmin || f(s)['content.create'] || f(s)['content.approve'] || f(s)['content.publish'] },
       { id: 'assets', label: 'Asset Groups', title: 'Asset Groups', icon: FolderKanban, built: true, allowed: (s) => f(s)['assets.manage'] || f(s)['assets.delete'] },
     ],
   },

@@ -11,12 +11,14 @@ import type {
   MentionSource,
   Network,
   Post,
+  PostEvent,
   PostStatus,
   Sentiment,
   SocialAccount,
   StaffRole,
   User,
 } from '@/domain/types'
+import { dayKeyHalifax, halifaxToISO } from '@/lib/time'
 import { defaultBrand } from './brand-seed'
 
 // Deterministic fictional seed. Every name, handle, message and metric here is invented.
@@ -213,6 +215,25 @@ const SOURCES: [MentionSource, Network | 'Web'][] = [
 
 const iso = (ms: number) => new Date(ms).toISOString()
 
+type SeedMedia = { name: string; folder: string; size: [number, number]; alt: string; tags: string[]; status: 'Approved' | 'Needs review' | 'Rejected' }
+const ALT = ['Autumn woodland path with fallen leaves.', 'City buses travelling along a street.', 'Wooden walkway through a forest of autumn trees.', 'City skyline across a lake at sunset.', 'Clear blue swimming pool water over lane markings.']
+const MEDIA_BASE: [string, string, string[]][] = [
+  ['autumn-collection', 'folder-service', ['leaf collection', 'autumn']],
+  ['transit-service', 'folder-service', ['transit', 'buses']],
+  ['community-trail', 'folder-community', ['trail', 'parks']],
+  ['city-waterfront', 'folder-brand', ['waterfront', 'skyline']],
+  ['pool-lanes', 'folder-community', ['recreation', 'swim']],
+]
+// First five are approved with ALT text and back the seeded posts. The rest vary, so review states and missing ALT text show up.
+const MEDIA_SEED: SeedMedia[] = Array.from({ length: 20 }, (_, i) => ({
+  name: `${MEDIA_BASE[i % 5][0]}-${i + 1}.jpg`,
+  folder: MEDIA_BASE[i % 5][1],
+  size: ([[1200, 1200], [1200, 630], [1200, 630], [1200, 1200]] as [number, number][])[i % 4],
+  alt: i >= 5 && i % 5 === 2 ? '' : ALT[i % 5],
+  tags: MEDIA_BASE[i % 5][2],
+  status: i === 7 || i === 12 || i === 17 ? 'Needs review' : i === 19 ? 'Rejected' : i === 5 ? 'Needs review' : 'Approved',
+}))
+
 export function createSeed(now = Date.now()): DemoState {
   const r = rng(20261021)
   const pick = <T,>(xs: T[]) => xs[Math.floor(r() * xs.length)]
@@ -285,20 +306,43 @@ export function createSeed(now = Date.now()): DemoState {
     const account = candidates[Math.floor(i / POST_TEMPLATES.length) % candidates.length]
     const published = status === 'Published' || status === 'Failed'
     const at = published ? now - (i % 16) * 10 * hour - 2 * hour : null
-    const scheduled = status === 'Scheduled' ? now + (6 + (i - 16) * 19) * hour : status === 'Approved' ? now + (3 + i) * day : null
+    // Scheduled posts spread over the next three weeks at business-hour slots, in Halifax time.
+    const k = i - 16
+    const scheduled = status === 'Scheduled' ? halifaxToISO(`${dayKeyHalifax(new Date(now + (1 + k * 2.6) * day))}T${['09:00', '12:30', '17:00'][k % 3]}`) : null
     const author = users.find((u) => u.department === department && u.functions.includes('content.create'))
+    const approver = users.find((u) => u.department === department && u.functions.includes('content.approve')) ?? users[0]
+    const created = now - (8 + i) * hour
+    const history: PostEvent[] = [{ id: `ev-${i}-0`, at: iso(created), actor: author?.name ?? 'Avery Morgan', action: 'Created' }]
+    const step = (action: PostEvent['action'], actor: string, offset: number, note?: string) => history.push({ id: `ev-${i}-${history.length}`, at: iso(created + offset * hour), actor, action, note })
+    if (status !== 'Draft') step('Submitted', author?.name ?? 'Avery Morgan', 1)
+    if (['Approved', 'Scheduled', 'Published', 'Failed'].includes(status)) step('Approved', approver.name, 3)
+    if (['Scheduled', 'Published', 'Failed'].includes(status)) step('Scheduled', approver.name, 4)
+    if (status === 'Published') history.push({ id: `ev-${i}-p`, at: iso(at!), actor: 'Demo queue', action: 'Published', note: 'Simulated. Nothing was sent to a platform.' })
+    const returned = status === 'Draft' && i % 7 === 3
+    if (returned) {
+      step('Submitted', author?.name ?? 'Avery Morgan', 1)
+      step('Returned', approver.name, 2, 'Add a clear next step and an official link before resubmitting.')
+    }
+    const net = account.network
     return {
       id: `POST-${300 + i}`,
       batchId: `batch-${300 + i}`,
       accountId: account.id,
       title,
       text,
+      comment: i % 6 === 0 ? 'More details and the full schedule are on the municipal website.' : '',
+      format: net === 'Instagram' ? (i % 2 ? 'Reel' : 'Feed') : net === 'YouTube' ? 'Short' : net === 'X' ? 'Thread' : 'Feed',
       status,
       photo: i % 5,
+      mediaId: `media-${i % 5}`,
+      assetGroupId: account.assetGroupId,
+      guidelineId: account.assetGroupId ? `set-${account.assetGroupId.replace('asset-', '')}-0` : null,
+      history,
+      reviewNote: returned ? 'Add a clear next step and an official link before resubmitting.' : null,
       alt: 'Illustrative sample photo, not a Harbourview location.',
-      scheduledFor: scheduled ? iso(Math.round(scheduled / (15 * 60_000)) * 15 * 60_000) : null,
+      scheduledFor: scheduled,
       publishedAt: at ? iso(at) : null,
-      createdAt: iso(now - (8 + i) * hour),
+      createdAt: iso(created),
       createdBy: author?.id ?? 'user-0',
       metrics:
         status === 'Published'
@@ -372,12 +416,39 @@ export function createSeed(now = Date.now()): DemoState {
   ]
 
   return {
-    version: 2,
+    version: 3,
     seededAt: iso(now),
     users,
     accounts,
     groups,
     archivedGroups: [],
+    media: MEDIA_SEED.map((m, i) => ({
+      id: `media-${i}`,
+      name: m.name,
+      mime: 'image/jpeg',
+      folderId: m.folder,
+      source: 'sample' as const,
+      photo: i % 5,
+      blobId: null,
+      bytes: null,
+      width: m.size[0],
+      height: m.size[1],
+      alt: m.alt,
+      tags: m.tags,
+      status: m.status,
+      reviewedBy: m.status === 'Needs review' ? null : 'Avery Morgan',
+      ownerId: 'user-0',
+      channelIds: [],
+      createdAt: iso(now - (30 - i) * day),
+      updatedAt: iso(now - (30 - i) * day),
+      versions: [],
+      trashedAt: null,
+    })),
+    mediaFolders: [
+      { id: 'folder-brand', name: 'Brand assets' },
+      { id: 'folder-service', name: 'Service updates' },
+      { id: 'folder-community', name: 'Community & recreation' },
+    ],
     posts,
     conversations,
     topics,

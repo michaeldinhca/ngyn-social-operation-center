@@ -6,16 +6,16 @@ Parallel work limit: 1
 
 ## Director decisions
 
+- 2026-10-21: "Rebuild all pages of Social Channels & Content, it is important." Stops 2b and 2c were built together and are reviewed together.
 - 2026-10-21: "Build the UI interaction mockup first." Backend work waits. The rebuild uses the frontend part of ADR 0001 (React + Vite SPA with a mock adapter) in `web/`. The v0 prototype stays as the reference.
 - 2026-10-21: Review **section by section**. The agent builds one menu section, reports, and stops for comments before starting the next.
-- 2026-10-21: § 2 is reviewed in three stops (2a, 2b, 2c), as proposed and approved ("do it").
-- 2026-10-21 (§ 1 R1): role-based demo permissions are the default; SOC keyword click keeps searching the inbox; the inbox is sentiment based, not ticket based (no priority).
+(m) => m- 2026-10-21 (§ 1 R1): role-based demo permissions are the default; SOC keyword click keeps searching the inbox; the inbox is sentiment based, not ticket based (no priority).
 
 ## Current task
 
 | Work-item ID | Work | State | Owner |
 | --- | --- | --- | --- |
-| `MOCKUP-V1-REBUILD` § 2a | Social Channels + Asset Groups. Report: `docs/work-items/MOCKUP-V1-CHANNELS-GROUPS/BUILD-REPORT.md` | `BUILT_AWAITING_REVIEW` | Claude |
+| `MOCKUP-V1-REBUILD` § 2b + 2c | All Content, Composer, Publishing Calendar, Media Storage. Report: `docs/work-items/MOCKUP-V1-CONTENT-MEDIA/BUILD-REPORT.md` | `BUILT_AWAITING_REVIEW` | Claude |
 
 ## Rebuild sections (review one at a time)
 
@@ -23,8 +23,8 @@ Parallel work limit: 1
 | ---: | --- | --- | --- |
 | 1 | Shell + Engagement | SOC, Inbox & Comments, Social Listening | R1 answers applied (priority removed, sentiment-first inbox) |
 | 2a | Social Channels + Asset Groups | Connections, capabilities, linking, group roles, brand direction, brand voices, delete | `BUILT_AWAITING_REVIEW` |
-| 2b | All Content + Composer + Publishing Calendar | Approval workflow, per-network composer, month/week calendar with reschedule | `QUEUED` |
-| 2c | Media Storage | Library, IndexedDB uploads, review, versions, trash, composer reuse | `QUEUED` |
+| 2b | All Content + Composer + Publishing Calendar | Approval workflow, per-network composer, month/week/list calendar with reschedule | `BUILT_AWAITING_REVIEW` |
+| 2c | Media Storage | Library, browser uploads, review, versions, trash, composer reuse | `BUILT_AWAITING_REVIEW` |
 | 3 | Advertising | Campaign draft with simulated budget and no-spend guard | `QUEUED` |
 | 4 | Insights | Analytics & Reports with SAMPLE-watermarked CSV/PDF export | `QUEUED` |
 | 5 | Settings | Users & Access, Activity Log, My Preferences | `QUEUED` |
@@ -45,6 +45,6 @@ Parallel work limit: 1
 ## Latest handoff
 
 - Next actor: Product Director
-- Required action: review § 2a and answer the 2 questions in its build report.
-- Evidence: typecheck clean, 12/12 unit, 61/61 browser dry-run, screenshots in `.dry-run/web/`.
-- Stop condition: § 2b does not start until § 2a comments are addressed or accepted.
+- Required action: review § 2b and § 2c (all of Social Channels & Content is now rebuilt) and answer the questions in the build reports.
+- Evidence: typecheck clean, 29/29 unit, 127/127 browser dry-run, screenshots in `.dry-run/web/`.
+- Stop condition: § 3 (Advertising) does not start until § 2 comments are addressed or accepted.

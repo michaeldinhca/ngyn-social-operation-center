@@ -1,8 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { Network } from '@/domain/types'
 import * as api from '@/mock/api'
 import * as assets from '@/mock/api-assets'
+import * as content from '@/mock/api-content'
+import * as media from '@/mock/api-media'
+import { getBlob } from '@/mock/blobs'
 import { useSessionContext } from '@/session'
 
 // Query layer. Screens talk to these hooks only; swapping the mock adapter for an HTTP
@@ -79,6 +83,67 @@ export function useGroups() {
 export function useGroup(id: string | null) {
   const actorId = useActor()
   return useQuery({ queryKey: ['group', actorId, id], queryFn: () => assets.getGroup(actorId, id!), enabled: !!id, retry: false, placeholderData: (prev) => (prev?.group.id === id ? prev : undefined) })
+}
+
+export function usePosts(filters: content.PostFilters) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['posts', actorId, filters], queryFn: () => content.listPosts(actorId, filters), placeholderData: (prev) => prev, retry: false })
+}
+
+export function usePost(id: string | null) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['post', actorId, id], queryFn: () => content.getPost(actorId, id!), enabled: !!id, retry: false })
+}
+
+export function useBatch(batchId: string | null) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['batch', actorId, batchId], queryFn: () => content.getBatch(actorId, batchId!), enabled: !!batchId, retry: false, staleTime: 0, gcTime: 0 })
+}
+
+export function useComposerContext() {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['composer-context', actorId], queryFn: () => content.composerContext(actorId), retry: false })
+}
+
+export function useMediaList(filters: media.MediaFilters) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['media', actorId, filters], queryFn: () => media.listMedia(actorId, filters), placeholderData: (prev) => prev, retry: false })
+}
+
+export function useMediaItem(id: string | null) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['media-item', actorId, id], queryFn: () => media.getMedia(actorId, id!), enabled: !!id, retry: false })
+}
+
+export function useUsableMedia(enabled = true) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['media-usable', actorId], queryFn: () => media.listUsableMedia(actorId), enabled, retry: false })
+}
+
+/** Object URL for an uploaded file in IndexedDB. Revoked when the component unmounts. */
+export function useBlobUrl(blobId: string | null | undefined) {
+  const [url, setUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!blobId) {
+      setUrl(null)
+      return
+    }
+    let revoked = false
+    let made: string | null = null
+    getBlob(blobId)
+      .then((b) => {
+        if (b && !revoked) {
+          made = URL.createObjectURL(b)
+          setUrl(made)
+        }
+      })
+      .catch(() => setUrl(null))
+    return () => {
+      revoked = true
+      if (made) URL.revokeObjectURL(made)
+    }
+  }, [blobId])
+  return url
 }
 
 export function useBrief(groupId: string, setId: string | null) {

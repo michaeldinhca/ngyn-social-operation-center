@@ -41,7 +41,9 @@ export function Shell() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const current = navItem(pathname.split('/')[1] || 'soc')
+  const pageId = pathname.split('/')[1] || 'soc'
+  const current = navItem(pageId === 'composer' ? 'content' : pageId)
+  const pageTitle = pageId === 'composer' ? 'Create post' : (current?.title ?? 'Social Operation Center')
 
   useEffect(() => setNav(readNav(navKey)), [navKey])
   useEffect(() => setMobileOpen(false), [pathname])
@@ -171,7 +173,7 @@ export function Shell() {
           </Button>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-muted">Municipality of Harbourview · Fictional</p>
-            <p className="truncate text-[0.9375rem] font-semibold">{current?.title ?? 'Social Operation Center'}</p>
+            <p className="truncate text-[0.9375rem] font-semibold">{pageTitle}</p>
           </div>
           <label className="flex items-center gap-2 text-sm text-muted">
             <span className="hidden sm:inline">View as</span>

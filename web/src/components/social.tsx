@@ -1,8 +1,7 @@
-import type { Network, Post, SocialAccount } from '@/domain/types'
-import { cn, formatDateTime, relativeTime, shortNumber } from '@/lib/utils'
-import { photoUrl, SAMPLE_PHOTOS } from '@/mock/photos'
-import { Dialog } from '@/components/ui/dialog'
-import { Badge, SimBadge } from '@/components/ui/primitives'
+import type { Network, SocialAccount } from '@/domain/types'
+import { cn } from '@/lib/utils'
+import { SAMPLE_PHOTOS } from '@/mock/photos'
+import { Badge } from '@/components/ui/primitives'
 
 const NETWORK_STYLE: Record<Network, { bg: string; glyph: string }> = {
   Facebook: { bg: '#1877f2', glyph: 'f' },
@@ -72,45 +71,5 @@ export function PhotoCredit({ index }: { index: number }) {
       </a>
       . Illustrative location, not Harbourview.
     </p>
-  )
-}
-
-/** Read-only post detail. Editing and approvals arrive with the Social Channels & Content section. */
-export function PostDialog({ post, account, open, onOpenChange }: { post: Post | null; account: SocialAccount | null; open: boolean; onOpenChange: (o: boolean) => void }) {
-  if (!post || !account) return null
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange} title={post.title} description={`${account.name} · ${account.network}`} className="max-w-xl">
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={post.status === 'Published' ? 'good' : post.status === 'Failed' ? 'bad' : post.status === 'Scheduled' ? 'info' : 'neutral'}>{post.status}</Badge>
-          {post.status === 'Scheduled' && <span className="text-sm text-text-2">Requested for {formatDateTime(post.scheduledFor)} (America/Halifax)</span>}
-          {post.publishedAt && <span className="text-sm text-text-2">Attempted {relativeTime(post.publishedAt)}</span>}
-        </div>
-        <p className="text-[0.9375rem] leading-relaxed">{post.text}</p>
-        <img src={photoUrl(post.photo, 900)} alt={post.alt} className="aspect-[1.91/1] w-full rounded-lg object-cover" loading="lazy" referrerPolicy="no-referrer" />
-        <PhotoCredit index={post.photo} />
-        {post.failureReason && <p className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">Failure: {post.failureReason}. No platform was called.</p>}
-        {post.metrics && (
-          <div className="grid grid-cols-3 gap-3 rounded-lg border border-border p-3 text-sm">
-            <div>
-              <p className="text-muted">Impressions</p>
-              <p className="tabular font-semibold">{shortNumber(post.metrics.impressions)}</p>
-            </div>
-            <div>
-              <p className="text-muted">Engagement</p>
-              <p className="tabular font-semibold">{shortNumber(post.metrics.engagements)}</p>
-            </div>
-            <div>
-              <p className="text-muted">Sample growth</p>
-              <p className="tabular font-semibold">+{post.metrics.trend}%</p>
-            </div>
-            <div className="col-span-3">
-              <SimBadge>Sample metrics</SimBadge>
-            </div>
-          </div>
-        )}
-        <p className="text-xs text-muted">Editing, approval and scheduling for this post open in All Content (next review section).</p>
-      </div>
-    </Dialog>
   )
 }

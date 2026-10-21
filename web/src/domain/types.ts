@@ -163,14 +163,35 @@ export interface PostMetrics {
   observedAt: string
 }
 
+export type PostFormat = 'Feed' | 'Reel' | 'Story' | 'Short' | 'Thread'
+
+export interface PostEvent {
+  id: string
+  at: string
+  actor: string
+  action: 'Created' | 'Edited' | 'Submitted' | 'Approved' | 'Returned' | 'Scheduled' | 'Rescheduled' | 'Unscheduled' | 'Published' | 'Failed'
+  note?: string
+}
+
 export interface Post {
   id: string
+  /** Posts created together in one composer session share a batchId, one post per destination channel. */
   batchId: string
   accountId: string
   title: string
   text: string
+  /** Optional follow-up comment, posted by staff after publishing where the network allows. */
+  comment: string
+  format: PostFormat
   status: PostStatus
   photo: number
+  /** Stored media asset used for the image, when chosen from Media Storage. */
+  mediaId: string | null
+  assetGroupId: string | null
+  guidelineId: string | null
+  history: PostEvent[]
+  /** Reviewer note from the last return to draft. */
+  reviewNote: string | null
   alt: string
   scheduledFor: string | null
   publishedAt: string | null
@@ -275,13 +296,58 @@ export interface EmergencyState {
   changedBy: string | null
 }
 
+export type MediaStatus = 'Needs review' | 'Approved' | 'Rejected'
+
+export interface MediaVersion {
+  id: string
+  name: string
+  at: string
+  by: string
+  bytes: number | null
+  blobId: string | null
+  photo: number | null
+}
+
+export interface MediaFolder {
+  id: string
+  name: string
+}
+
+export interface MediaAsset {
+  id: string
+  name: string
+  mime: string
+  folderId: string | null
+  source: 'sample' | 'upload'
+  /** Sample photo index for seeded assets. */
+  photo: number | null
+  /** IndexedDB key for uploaded files. */
+  blobId: string | null
+  bytes: number | null
+  width: number | null
+  height: number | null
+  alt: string
+  tags: string[]
+  status: MediaStatus
+  reviewedBy: string | null
+  ownerId: string
+  /** When set, only people with access to one of these channels can use the asset. */
+  channelIds: string[]
+  createdAt: string
+  updatedAt: string
+  versions: MediaVersion[]
+  trashedAt: string | null
+}
+
 export interface DemoState {
-  version: 2
+  version: 3
   seededAt: string
   users: User[]
   accounts: SocialAccount[]
   groups: AssetGroup[]
   archivedGroups: ArchivedGroup[]
+  media: MediaAsset[]
+  mediaFolders: MediaFolder[]
   posts: Post[]
   conversations: Conversation[]
   topics: ListeningTopic[]

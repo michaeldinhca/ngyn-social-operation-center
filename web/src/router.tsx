@@ -10,6 +10,10 @@ import { ListeningPage } from '@/pages/engagement/Listening'
 import { PendingSection } from '@/pages/PendingSection'
 import { ChannelsPage } from '@/pages/channels/Channels'
 import { AssetGroupsPage } from '@/pages/channels/AssetGroups'
+import { ContentPage } from '@/pages/content/Content'
+import { ComposerPage } from '@/pages/content/Composer'
+import { CalendarPage } from '@/pages/content/Calendar'
+import { MediaPage } from '@/pages/media/Media'
 
 export interface PageSearch {
   c?: string
@@ -19,6 +23,8 @@ export interface PageSearch {
   network?: string
   group?: string
   tab?: string
+  batch?: string
+  status?: string
 }
 
 const rootRoute = createRootRoute({ component: Shell })
@@ -30,7 +36,7 @@ const pageRoute = createRoute({
   path: '$page',
   validateSearch: (search: Record<string, unknown>): PageSearch => {
     const pick = (k: string) => (typeof search[k] === 'string' && search[k] ? (search[k] as string) : undefined)
-    return { c: pick('c'), topic: pick('topic'), q: pick('q'), sentiment: pick('sentiment'), network: pick('network'), group: pick('group'), tab: pick('tab') }
+    return { c: pick('c'), topic: pick('topic'), q: pick('q'), sentiment: pick('sentiment'), network: pick('network'), group: pick('group'), tab: pick('tab'), batch: pick('batch'), status: pick('status') }
   },
   component: PageSwitch,
 })
@@ -38,6 +44,10 @@ const pageRoute = createRoute({
 function PageSwitch() {
   const { page } = pageRoute.useParams()
   const session = useSession()
+  if (page === 'composer') {
+    if (!session.data) return <Skeleton className="h-96" />
+    return session.data.functions['content.create'] ? <ComposerPage /> : <EmptyState title="Your demo user does not have this function" icon={<Lock />}>Creating posts needs the content creation function.</EmptyState>
+  }
   const item = navItem(page)
   if (!item) return <Navigate to="/$page" params={{ page: 'soc' }} />
   if (!session.data) return <Skeleton className="h-96" />
@@ -57,6 +67,9 @@ function PageSwitch() {
   if (page === 'listening') return <ListeningPage />
   if (page === 'channels') return <ChannelsPage />
   if (page === 'assets') return <AssetGroupsPage />
+  if (page === 'content') return <ContentPage />
+  if (page === 'calendar') return <CalendarPage />
+  if (page === 'media') return <MediaPage />
   return <PendingSection item={item} />
 }
 
