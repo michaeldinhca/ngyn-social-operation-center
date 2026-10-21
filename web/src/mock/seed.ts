@@ -3,6 +3,9 @@ import type {
   Category,
   Conversation,
   DemoState,
+  AdAccount,
+  AdCampaign,
+  AuditEvent,
   Department,
   FunctionId,
   ListeningAlert,
@@ -19,6 +22,7 @@ import type {
   User,
 } from '@/domain/types'
 import { dayKeyHalifax, halifaxToISO } from '@/lib/time'
+import { ROLE_FUNCTIONS } from '@/domain/roles'
 import { defaultBrand } from './brand-seed'
 
 // Deterministic fictional seed. Every name, handle, message and metric here is invented.
@@ -36,15 +40,6 @@ function rng(seed: number) {
 }
 
 const DEPARTMENTS: Department[] = ['Communications', 'Public Works', 'Transit', 'Recreation', 'Customer Service', 'IT']
-
-const ROLE_FUNCTIONS: Record<StaffRole, FunctionId[]> = {
-  Administrator: ['content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete'],
-  Approver: ['content.create', 'content.approve', 'content.publish', 'reports.view'],
-  Editor: ['content.create'],
-  Responder: ['inbox.respond'],
-  Analyst: ['reports.view'],
-  Viewer: [],
-}
 
 const STAFF: [string, Department, StaffRole][] = [
   ['Avery Morgan', 'Communications', 'Administrator'],
@@ -265,6 +260,7 @@ export function createSeed(now = Date.now()): DemoState {
     const extra: FunctionId[] = []
     if (id === 'user-18') extra.push('assets.manage') // Communications approver also manages that brand
     if (id === 'user-11') extra.push('channels.manage') // IT editor looks after IT connections
+    if (id === 'user-18') extra.push('ads.create') // Communications approver drafts ads on the careers ad account only
     return {
       id,
       name,
@@ -274,7 +270,7 @@ export function createSeed(now = Date.now()): DemoState {
       status: id === 'user-10' ? 'Invited' : 'Active',
       functions: [...ROLE_FUNCTIONS[role], ...extra],
       channels,
-      adAccounts: [],
+      adAccounts: id === 'user-18' ? ['ad-2'] : [],
     }
   })
 
@@ -290,6 +286,8 @@ export function createSeed(now = Date.now()): DemoState {
   // Lily Green (Recreation editor) also creates for two Communications channels through a group role only.
   groups[0].assignments.push({ userId: 'user-21', role: 'creator', channelIds: ['social-0', 'social-6'], adAccountIds: [] })
   // Theo Wright approves for 311 through the Customer Service group.
+  // Mason Clark manages ads on one ad account through a group role only.
+  groups[0].assignments.push({ userId: 'user-12', role: 'ads', channelIds: [], adAccountIds: ['ad-0'] })
   groups[4].assignments.push({ userId: 'user-28', role: 'approver', channelIds: ['social-4', 'social-10'], adAccountIds: [] })
 
   const statusPlan: PostStatus[] = [
@@ -385,6 +383,96 @@ export function createSeed(now = Date.now()): DemoState {
     }
   })
 
+  const adAccounts: AdAccount[] = [
+    { id: 'ad-0', name: 'Harbourview Communications Ads', network: 'Meta', assetGroupId: 'asset-0', limitCents: 200000, createdAt: iso(now - 50 * day) },
+    { id: 'ad-1', name: 'Harbourview Transit Ads', network: 'Google', assetGroupId: 'asset-2', limitCents: 150000, createdAt: iso(now - 50 * day) },
+    { id: 'ad-2', name: 'Harbourview Careers Ads', network: 'LinkedIn', assetGroupId: 'asset-0', limitCents: 80000, createdAt: iso(now - 40 * day) },
+  ]
+  const dayIn = (n: number) => dayKeyHalifax(new Date(now + n * day))
+  const ev = (id: string, action: AdCampaign['history'][number]['action'], actor: string, offsetHours: number, note?: string) => ({ id, at: iso(now + offsetHours * hour), actor, action, note })
+  const campaigns: AdCampaign[] = [
+    {
+      id: 'camp-0',
+      name: 'Winter parking ban awareness',
+      adAccountId: 'ad-0',
+      objective: 'Service announcement',
+      headline: 'Winter parking ban starts December 1',
+      body: 'From 1 a.m. to 6 a.m., no parking on city streets so plows can clear curb to curb. Details on the municipal website.',
+      postId: 'POST-305',
+      audience: { area: 'Harbourview and 10 km around', ageMin: 18, ageMax: 65, language: 'Bilingual', interests: ['Local news', 'Commuting'] },
+      startDay: dayIn(7),
+      endDay: dayIn(16),
+      dailyBudgetCents: 2500,
+      status: 'Approved',
+      reviewNote: null,
+      spentCents: 0,
+      history: [ev('ce-0-0', 'Created', 'Avery Morgan', -90), ev('ce-0-1', 'Submitted', 'Avery Morgan', -80), ev('ce-0-2', 'Approved', 'Leo Adams', -70)],
+      createdBy: 'user-0',
+      createdAt: iso(now - 90 * hour),
+    },
+    {
+      id: 'camp-1',
+      name: 'Transit accessibility week',
+      adAccountId: 'ad-1',
+      objective: 'Event promotion',
+      headline: 'Accessible transit week: free rider workshops',
+      body: 'Learn how to use low-floor buses and the trip planner. Free workshops all week.',
+      postId: null,
+      audience: { area: 'Harbourview', ageMin: 25, ageMax: 65, language: 'English', interests: ['Public transit', 'Accessibility'] },
+      startDay: dayIn(14),
+      endDay: dayIn(20),
+      dailyBudgetCents: 4000,
+      status: 'Draft',
+      reviewNote: null,
+      spentCents: 0,
+      history: [ev('ce-1-0', 'Created', 'Ethan Ross', -30)],
+      createdBy: 'user-8',
+      createdAt: iso(now - 30 * hour),
+    },
+    {
+      id: 'camp-2',
+      name: 'Recreation winter registration',
+      adAccountId: 'ad-0',
+      objective: 'Service announcement',
+      headline: 'Winter swim and skate programs: register now',
+      body: 'Spaces are limited. Fee assistance is available for most programs.',
+      postId: null,
+      audience: { area: 'Harbourview', ageMin: 25, ageMax: 54, language: 'English', interests: ['Parenting', 'Fitness'] },
+      startDay: dayIn(10),
+      endDay: dayIn(16),
+      dailyBudgetCents: 3000,
+      status: 'In review',
+      reviewNote: null,
+      spentCents: 0,
+      history: [ev('ce-2-0', 'Created', 'Emma Roy', -20), ev('ce-2-1', 'Submitted', 'Emma Roy', -10)],
+      createdBy: 'user-3',
+      createdAt: iso(now - 20 * hour),
+    },
+  ]
+
+  const AUDIT: [string, string, string][] = [
+    ['Avery Morgan', 'Permission changed', 'Maya Chen: added content.create'],
+    ['Avery Morgan', 'Mock reconnect', 'Municipality of Harbourview (Facebook): expiry extended 60 days. No real token obtained.'],
+    ['Emma Roy', 'Post approve', 'POST-337 Community swim registration → Approved'],
+    ['Ethan Ross', 'Post approve', 'POST-334 Route 8 detour → Approved'],
+    ['Oliver Reed', 'Posts submitted for approval', 'Budget survey open: 2 created, 0 updated, 0 stale draft(s) removed.'],
+    ['Chloe Martin', 'Conversation resolved after human review', 'CONV-2108. No external reply was sent.'],
+    ['Noah Grant', 'Conversation routing saved', 'CONV-2115: owner → Noah Grant, sentiment → Concerned (staff override)'],
+    ['Avery Morgan', 'Media approved', '3 file(s)'],
+    ['Leo Adams', 'Guideline set reviewed', 'Harbourview Communications · Service notices'],
+    ['Avery Morgan', 'Asset Group channel links updated', 'Harbourview Public Works: 1 linked, 0 unlinked. No one gained access.'],
+    ['Avery Morgan', 'Emergency pause activated', 'Severe weather hold on routine posts'],
+    ['Avery Morgan', 'Publishing resumed', 'Weather warning lifted'],
+    ['Lily Green', 'Post edited', 'POST-318 Fall leaf collection'],
+    ['Theo Wright', 'Group role assigned', 'Harbourview Customer Service: approver for 1 person(s), 2 channel(s).'],
+    ['Avery Morgan', 'Listening alert saved', 'Flooding and water mains: 60%+ negative'],
+    ['System', 'Demo publication processed', 'Fall leaf collection on Harbourview Public Works. Nothing sent externally.'],
+  ]
+  const audit: AuditEvent[] = Array.from({ length: 48 }, (_, i) => {
+    const [actor, action, detail] = AUDIT[i % AUDIT.length]
+    return { id: `audit-seed-${i}`, at: iso(now - (i * 6.5 + 2) * hour - Math.round(r() * 3) * 60_000), actor, action, detail }
+  })
+
   const topics: ListeningTopic[] = TOPICS.map(([name, keywords], i) => ({ id: `topic-${i}`, name, keywords, createdBy: 'user-0', createdAt: iso(now - (20 + i) * day) }))
 
   const mentions: Mention[] = []
@@ -416,7 +504,7 @@ export function createSeed(now = Date.now()): DemoState {
   ]
 
   return {
-    version: 3,
+    version: 4,
     seededAt: iso(now),
     users,
     accounts,
@@ -444,6 +532,8 @@ export function createSeed(now = Date.now()): DemoState {
       versions: [],
       trashedAt: null,
     })),
+    adAccounts,
+    campaigns,
     mediaFolders: [
       { id: 'folder-brand', name: 'Brand assets' },
       { id: 'folder-service', name: 'Service updates' },
@@ -454,7 +544,7 @@ export function createSeed(now = Date.now()): DemoState {
     topics,
     mentions,
     alerts,
-    audit: [{ id: 'audit-0', at: iso(now), actor: 'System', action: 'Demo data seeded', detail: 'Fictional Harbourview baseline loaded in this browser.' }],
+    audit: [...audit, { id: 'audit-0', at: iso(now - 15 * day), actor: 'System', action: 'Demo data seeded', detail: 'Fictional Harbourview baseline loaded in this browser.' }],
     feed: [],
     emergency: { paused: false, reason: null, changedAt: null, changedBy: null },
     updateIndex: 0,

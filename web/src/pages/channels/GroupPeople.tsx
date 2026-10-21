@@ -12,14 +12,15 @@ import * as assets from '@/mock/api-assets'
 const ROLES: { role: GroupRole; label: string; description: string }[] = [
   { role: 'creator', label: 'Content creators', description: 'Create and submit drafts for the selected channels.' },
   { role: 'approver', label: 'Content approvers', description: 'Review and approve content for the selected channels.' },
-  { role: 'ads', label: 'Ad managers', description: 'Recorded for later. No ad accounts exist yet, so this role grants no ad account scope and no spend authority.' },
+  { role: 'ads', label: 'Ad managers', description: 'Draft and approve campaigns on the selected ad accounts. Approval never authorizes spend.' },
 ]
 
 export function GroupPeople({ d }: { d: assets.GroupDetail }) {
   const [adding, setAdding] = useState<GroupRole | null>(null)
-  const [editing, setEditing] = useState<{ userId: string; role: GroupRole; channelIds: string[] } | null>(null)
+  const [editing, setEditing] = useState<{ userId: string; role: GroupRole; channelIds: string[]; adAccountIds: string[] } | null>(null)
   const remove = useAction(assets.removeGroupRole, { success: 'Group role removed. Direct permissions in Users & Access are unchanged.' })
   const channelName = (id: string) => d.channels.find((c) => c.id === id)?.name ?? 'Unlinked channel'
+  const adName = (id: string) => d.adAccounts.find((c) => c.id === id)?.name ?? 'Unlinked ad account'
 
   return (
     <>
@@ -45,9 +46,9 @@ export function GroupPeople({ d }: { d: assets.GroupDetail }) {
                           <span className="block text-sm font-medium">{p.name}</span>
                           <span className="block text-xs text-muted">{p.staffRole}</span>
                         </span>
-                        {d.canEdit && r.role !== 'ads' && (
-                          <Button size="sm" variant="ghost" onClick={() => setEditing({ userId: p.userId, role: p.role, channelIds: p.channelIds })}>
-                            Channels
+                        {d.canEdit && (
+                          <Button size="sm" variant="ghost" onClick={() => setEditing({ userId: p.userId, role: p.role, channelIds: p.channelIds, adAccountIds: p.adAccountIds })}>
+                            {r.role === 'ads' ? 'Ad accounts' : 'Channels'}
                           </Button>
                         )}
                         {d.canEdit && (
@@ -56,13 +57,9 @@ export function GroupPeople({ d }: { d: assets.GroupDetail }) {
                           </Button>
                         )}
                       </div>
-                      {r.role !== 'ads' && (
-                        <div className="mt-1.5 flex flex-wrap gap-1">
-                          {p.channelIds.map((c) => (
-                            <Badge key={c}>{channelName(c)}</Badge>
-                          ))}
-                        </div>
-                      )}
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {r.role === 'ads' ? p.adAccountIds.map((c) => <Badge key={c}>{adName(c)}</Badge>) : p.channelIds.map((c) => <Badge key={c}>{channelName(c)}</Badge>)}
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -70,7 +67,7 @@ export function GroupPeople({ d }: { d: assets.GroupDetail }) {
                 <p className="mb-3 flex-1 text-sm text-muted">Nobody assigned.</p>
               )}
               {d.canEdit && (
-                <Button size="sm" onClick={() => setAdding(r.role)} disabled={r.role !== 'ads' && !d.channels.length} title={r.role !== 'ads' && !d.channels.length ? 'Link a channel first' : undefined}>
+                <Button size="sm" onClick={() => setAdding(r.role)} disabled={r.role === 'ads' ? !d.adAccounts.length : !d.channels.length} title={r.role === 'ads' ? (!d.adAccounts.length ? 'Link an ad account to this group first (Campaigns, Ad accounts)' : undefined) : !d.channels.length ? 'Link a channel first' : undefined}>
                   <Plus /> Add {r.label.toLowerCase()}
                 </Button>
               )}
@@ -102,16 +99,35 @@ function ChannelChecklist({ d, chosen, setChosen }: { d: assets.GroupDetail; cho
   )
 }
 
+function AdChecklist({ d, chosen, setChosen }: { d: assets.GroupDetail; chosen: string[]; setChosen: (x: string[]) => void }) {
+  return (
+    <ul className="space-y-1.5">
+      {d.adAccounts.map((c) => (
+        <li key={c.id}>
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2 hover:bg-surface-2">
+            <input type="checkbox" name="group-ad-account" className="size-4 accent-[var(--accent-strong)]" checked={chosen.includes(c.id)} onChange={(e) => setChosen(e.target.checked ? [...chosen, c.id] : chosen.filter((y) => y !== c.id))} />
+            <span className="text-sm">
+              {c.name} <span className="text-muted">· {c.network}</span>
+            </span>
+          </label>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function AssignDialog({ role, onClose, d }: { role: GroupRole | null; onClose: () => void; d: assets.GroupDetail }) {
   const [q, setQ] = useState('')
   const [users, setUsers] = useState<string[]>([])
   const [channels, setChannels] = useState<string[]>([])
+  const [ads, setAds] = useState<string[]>([])
   const assign = useAction(assets.assignGroupRole, { success: 'Role assigned inside this group only.' })
   useEffect(() => {
     if (role) {
       setQ('')
       setUsers([])
       setChannels([])
+      setAds([])
     }
   }, [role])
   const def = ROLES.find((r) => r.role === role)
@@ -126,7 +142,7 @@ function AssignDialog({ role, onClose, d }: { role: GroupRole | null; onClose: (
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={!users.length || (role !== 'ads' && !channels.length) || assign.isPending} onClick={() => assign.mutate([d.group.id, role!, users, channels], { onSuccess: onClose })}>
+          <Button variant="primary" disabled={!users.length || (role === 'ads' ? !ads.length : !channels.length) || assign.isPending} onClick={() => assign.mutate([d.group.id, role!, users, channels, ads], { onSuccess: onClose })}>
             Assign {users.length ? `${users.length} ` : ''}
             {users.length === 1 ? 'person' : 'people'}
           </Button>
@@ -160,41 +176,38 @@ function AssignDialog({ role, onClose, d }: { role: GroupRole | null; onClose: (
           </ul>
         </div>
         <div>
-          <p className="mb-2 text-[0.8125rem] font-medium text-text-2">Channels covered</p>
-          {role === 'ads' ? (
-            <p className="rounded-lg bg-warn-soft px-3 py-2 text-sm text-warn">No ad accounts exist yet. The role is recorded but grants no ad account scope or spend authority.</p>
-          ) : (
-            <ChannelChecklist d={d} chosen={channels} setChosen={setChannels} />
-          )}
+          <p className="mb-2 text-[0.8125rem] font-medium text-text-2">{role === 'ads' ? 'Ad accounts covered' : 'Channels covered'}</p>
+          {role === 'ads' ? <AdChecklist d={d} chosen={ads} setChosen={setAds} /> : <ChannelChecklist d={d} chosen={channels} setChosen={setChannels} />}
         </div>
       </div>
     </Dialog>
   )
 }
 
-function EditChannelsDialog({ editing, onClose, d }: { editing: { userId: string; role: GroupRole; channelIds: string[] } | null; onClose: () => void; d: assets.GroupDetail }) {
+function EditChannelsDialog({ editing, onClose, d }: { editing: { userId: string; role: GroupRole; channelIds: string[]; adAccountIds: string[] } | null; onClose: () => void; d: assets.GroupDetail }) {
   const [chosen, setChosen] = useState<string[]>([])
-  const save = useAction(assets.updateGroupRole, { success: 'Channels for this role updated.' })
+  const save = useAction(assets.updateGroupRole, { success: 'Coverage for this role updated.' })
+  const isAds = editing?.role === 'ads'
   useEffect(() => {
-    if (editing) setChosen(editing.channelIds.filter((c) => d.channels.some((x) => x.id === c)))
-  }, [editing, d.channels])
+    if (editing) setChosen(editing.role === 'ads' ? editing.adAccountIds.filter((c) => d.adAccounts.some((x) => x.id === c)) : editing.channelIds.filter((c) => d.channels.some((x) => x.id === c)))
+  }, [editing, d.channels, d.adAccounts])
   const person = d.people.find((p) => p.userId === editing?.userId && p.role === editing?.role)
   return (
     <Dialog
       open={!!editing}
       onOpenChange={(o) => !o && onClose()}
-      title={`Channels for ${person?.name ?? ''}`}
-      description={`${editing?.role === 'creator' ? 'Content creator' : 'Content approver'} in ${d.group.name}.`}
+      title={`${isAds ? 'Ad accounts' : 'Channels'} for ${person?.name ?? ''}`}
+      description={`${editing?.role === 'creator' ? 'Content creator' : editing?.role === 'ads' ? 'Ad manager' : 'Content approver'} in ${d.group.name}.`}
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={!chosen.length || save.isPending} onClick={() => save.mutate([d.group.id, editing!.userId, editing!.role, chosen], { onSuccess: onClose })}>
-            Save channels
+          <Button variant="primary" disabled={!chosen.length || save.isPending} onClick={() => save.mutate([d.group.id, editing!.userId, editing!.role, isAds ? [] : chosen, isAds ? chosen : []], { onSuccess: onClose })}>
+            Save
           </Button>
         </>
       }
     >
-      <ChannelChecklist d={d} chosen={chosen} setChosen={setChosen} />
+      {isAds ? <AdChecklist d={d} chosen={chosen} setChosen={setChosen} /> : <ChannelChecklist d={d} chosen={chosen} setChosen={setChosen} />}
     </Dialog>
   )
 }

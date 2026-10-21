@@ -67,6 +67,9 @@ export function LineChart({
   const y = (v: number) => PAD.top + innerH - ((v - min) / (max - min)) * innerH
   const ticks = [min, min + (max - min) / 2, max]
   const hover = useHover(points.length, innerW, W)
+  // Show only as many x labels as fit, and smaller markers when there are many points.
+  const every = Math.max(1, Math.ceil(points.length / Math.max(1, Math.floor(innerW / 64))))
+  const dot = points.length > 24 ? 2.5 : 4
   const gradient = useId()
 
   // Break the line where a value is missing; never interpolate fabricated samples.
@@ -117,13 +120,15 @@ export function LineChart({
         {points.map((p, i) => (
           <g key={p.label + i}>
             {p.value !== null ? (
-              <circle cx={x(i)} cy={y(p.value)} r={hover.index === i ? 5 : 4} fill="var(--chart-line)" stroke="var(--surface)" strokeWidth={2} />
+              <circle cx={x(i)} cy={y(p.value)} r={hover.index === i ? dot + 1.5 : dot} fill="var(--chart-line)" stroke="var(--surface)" strokeWidth={2} />
             ) : (
-              <circle cx={x(i)} cy={y(zeroLine ? 0 : min)} r={4} fill="none" stroke="currentColor" strokeDasharray="2 2" />
+              <circle cx={x(i)} cy={y(zeroLine ? 0 : min)} r={dot} fill="none" stroke="currentColor" strokeDasharray="2 2" />
             )}
-            <text x={x(i)} y={height - 8} textAnchor="middle" fontSize="12" fill="currentColor">
-              {p.label}
-            </text>
+            {i % every === 0 && (
+              <text x={x(i)} y={height - 8} textAnchor="middle" fontSize="12" fill="currentColor">
+                {p.label}
+              </text>
+            )}
           </g>
         ))}
         {hover.index !== null && <line x1={x(hover.index)} x2={x(hover.index)} y1={PAD.top} y2={PAD.top + innerH} stroke="currentColor" strokeOpacity={0.35} />}
@@ -148,6 +153,7 @@ export function BarChart({ points, height = 180, ariaLabel, valueLabel }: { poin
   const innerH = height - PAD.top - PAD.bottom
   const max = Math.max(1, ...points.map((p) => p.value ?? 0)) * 1.15
   const slot = innerW / points.length
+  const every = Math.max(1, Math.ceil(points.length / Math.max(1, Math.floor(innerW / 56))))
   const bw = Math.min(44, slot - 2)
   const y = (v: number) => PAD.top + innerH - (v / max) * innerH
   const [hi, setHi] = useState<number | null>(null)
@@ -176,9 +182,11 @@ export function BarChart({ points, height = 180, ariaLabel, valueLabel }: { poin
                 fill="var(--chart-line)"
                 opacity={hi === null || hi === i ? 1 : 0.55}
               />
-              <text x={cx} y={height - 8} textAnchor="middle" fontSize="12" fill="currentColor">
-                {p.label}
-              </text>
+              {i % every === 0 && (
+                <text x={cx} y={height - 8} textAnchor="middle" fontSize="12" fill="currentColor">
+                  {p.label}
+                </text>
+              )}
             </g>
           )
         })}

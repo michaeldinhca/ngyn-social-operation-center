@@ -12,7 +12,7 @@ function read(): DemoState | null {
     const raw = localStorage.getItem(KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as DemoState
-    return parsed.version === 3 ? parsed : null
+    return parsed.version === 4 ? parsed : null
   } catch {
     return null
   }

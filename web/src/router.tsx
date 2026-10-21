@@ -14,6 +14,11 @@ import { ContentPage } from '@/pages/content/Content'
 import { ComposerPage } from '@/pages/content/Composer'
 import { CalendarPage } from '@/pages/content/Calendar'
 import { MediaPage } from '@/pages/media/Media'
+import { AdsPage } from '@/pages/ads/Ads'
+import { AnalyticsPage } from '@/pages/insights/Analytics'
+import { UsersPage } from '@/pages/settings/Users'
+import { AuditPage } from '@/pages/settings/Audit'
+import { PreferencesPage } from '@/pages/settings/Preferences'
 
 export interface PageSearch {
   c?: string
@@ -70,6 +75,11 @@ function PageSwitch() {
   if (page === 'content') return <ContentPage />
   if (page === 'calendar') return <CalendarPage />
   if (page === 'media') return <MediaPage />
+  if (page === 'ads') return <AdsPage />
+  if (page === 'analytics') return <AnalyticsPage />
+  if (page === 'users') return <UsersPage />
+  if (page === 'audit') return <AuditPage />
+  if (page === 'preferences') return <PreferencesPage />
   return <PendingSection item={item} />
 }
 

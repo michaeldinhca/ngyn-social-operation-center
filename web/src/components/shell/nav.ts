@@ -65,18 +65,18 @@ export const NAV: { title: string; items: NavItem[] }[] = [
   },
   {
     title: 'Advertising',
-    items: [{ id: 'ads', label: 'Campaigns', title: 'Campaigns', icon: Megaphone, built: false, allowed: (s) => f(s)['ads.create'] || f(s)['ads.manage'] }],
+    items: [{ id: 'ads', label: 'Campaigns', title: 'Campaigns', icon: Megaphone, built: true, allowed: (s) => f(s)['ads.create'] || f(s)['ads.manage'] || f(s)['ads.accounts.add'] }],
   },
   {
     title: 'Insights',
-    items: [{ id: 'analytics', label: 'Analytics & Reports', title: 'Analytics & Reports', icon: BarChart3, built: false, allowed: (s) => f(s)['reports.view'] }],
+    items: [{ id: 'analytics', label: 'Analytics & Reports', title: 'Analytics & Reports', icon: BarChart3, built: true, allowed: (s) => f(s)['reports.view'] }],
   },
   {
     title: 'Settings',
     items: [
-      { id: 'users', label: 'Users & Access', title: 'Users & Access', icon: Users, built: false, allowed: (s) => s.isAdmin },
-      { id: 'audit', label: 'Activity Log', title: 'Activity Log', icon: ScrollText, built: false, allowed: (s) => s.isAdmin },
-      { id: 'preferences', label: 'My Preferences', title: 'My Preferences', icon: Settings2, built: false, allowed: () => true },
+      { id: 'users', label: 'Users & Access', title: 'Users & Access', icon: Users, built: true, allowed: (s) => s.isAdmin },
+      { id: 'audit', label: 'Activity Log', title: 'Activity Log', icon: ScrollText, built: true, allowed: (s) => s.isAdmin },
+      { id: 'preferences', label: 'My Preferences', title: 'My Preferences', icon: Settings2, built: true, allowed: () => true },
     ],
   },
 ]

@@ -3,6 +3,7 @@ import { connectionStatus } from '@/domain/connection'
 import { canViewAccount, GROUP_ROLE_FUNCTIONS, hasFunction } from '@/domain/permissions'
 import {
   NETWORKS,
+  type AdAccount,
   type AssetGroup,
   type BrandVoice,
   type DemoState,
@@ -260,7 +261,9 @@ export interface GroupDetail {
   channels: SocialAccount[]
   /** Channels the actor could link: unlinked or in this group, inside their scope. Others shown for context. */
   linkable: (SocialAccount & { otherGroup: string | null })[]
-  people: { userId: string; name: string; role: GroupRole; staffRole: string; channelIds: string[] }[]
+  people: { userId: string; name: string; role: GroupRole; staffRole: string; channelIds: string[]; adAccountIds: string[] }[]
+  /** Ad accounts linked to this group. Ad-manager roles can only cover these. */
+  adAccounts: AdAccount[]
   staff: { id: string; name: string; role: string; department: string }[]
   canEdit: boolean
   canDelete: boolean
@@ -280,8 +283,9 @@ export function getGroup(actorId: string, id: string): Promise<GroupDetail> {
       .map((a) => ({ ...a, otherGroup: a.assetGroupId && a.assetGroupId !== g.id ? (s.groups.find((x) => x.id === a.assetGroupId)?.name ?? null) : null })),
     people: g.assignments.map((a) => {
       const u = s.users.find((x) => x.id === a.userId)
-      return { userId: a.userId, name: u?.name ?? 'Unknown', role: a.role, staffRole: u?.role ?? '', channelIds: a.channelIds }
+      return { userId: a.userId, name: u?.name ?? 'Unknown', role: a.role, staffRole: u?.role ?? '', channelIds: a.channelIds, adAccountIds: a.adAccountIds }
     }),
+    adAccounts: s.adAccounts.filter((x) => x.assetGroupId === g.id),
     staff: s.users.filter((u) => u.status === 'Active').map((u) => ({ id: u.id, name: u.name, role: u.role, department: u.department })),
     canEdit: canEdit(s, actorId, g),
     canDelete: canDelete(s, actorId, g),
@@ -374,41 +378,59 @@ export function deleteGroup(actorId: string, id: string, confirm: string) {
   if (confirm !== 'DELETE') throw new ApiError('Type DELETE to confirm.')
   const unlinked = s.accounts.filter((a) => a.assetGroupId === g.id)
   unlinked.forEach((a) => (a.assetGroupId = null))
+  const unlinkedAds = s.adAccounts.filter((a) => a.assetGroupId === g.id)
+  unlinkedAds.forEach((a) => (a.assetGroupId = null))
   s.archivedGroups.push({ ...structuredClone(g), archivedAt: nowISO(), archivedBy: actorName(s, actorId), unlinkedChannelIds: unlinked.map((a) => a.id) })
   s.groups = s.groups.filter((x) => x.id !== g.id)
-  audit(s, actorId, 'Asset Group deleted (archived)', `${g.name}: ${unlinked.length} channels unlinked and kept. Group roles ended; direct grants unchanged.`)
+  audit(s, actorId, 'Asset Group deleted (archived)', `${g.name}: ${unlinked.length} channels unlinked and kept. ${unlinkedAds.length} ad account(s) unlinked and kept. Group roles ended; direct grants unchanged.`)
   persist()
   return wait(unlinked.length)
 }
 
-export function assignGroupRole(actorId: string, groupId: string, role: GroupRole, userIds: string[], channelIds: string[]) {
+export function assignGroupRole(actorId: string, groupId: string, role: GroupRole, userIds: string[], channelIds: string[], adAccountIds: string[] = []) {
   const s = db()
   const g = loadGroup(s, actorId, groupId, 'edit')
   if (!userIds.length) throw new ApiError('Select at least one person.')
   const linked = new Set(s.accounts.filter((a) => a.assetGroupId === g.id).map((a) => a.id))
-  if (role !== 'ads' && !channelIds.length) throw new ApiError('Select the channels this role covers. Nothing is selected by default.')
-  if (channelIds.some((c) => !linked.has(c))) throw new ApiError('Only channels linked to this group can be selected.')
+  const linkedAds = new Set(s.adAccounts.filter((a) => a.assetGroupId === g.id).map((a) => a.id))
+  if (role === 'ads') {
+    if (!adAccountIds.length) throw new ApiError('Select the ad accounts this role covers. Nothing is selected by default.')
+    if (adAccountIds.some((x) => !linkedAds.has(x))) throw new ApiError('Only ad accounts linked to this group can be selected.')
+  } else {
+    if (!channelIds.length) throw new ApiError('Select the channels this role covers. Nothing is selected by default.')
+    if (channelIds.some((c) => !linked.has(c))) throw new ApiError('Only channels linked to this group can be selected.')
+  }
   for (const userId of userIds) {
     if (!s.users.some((u) => u.id === userId && u.status === 'Active')) throw new ApiError('Only active staff can be assigned.')
     const prior = g.assignments.find((a) => a.userId === userId && a.role === role)
-    if (prior) prior.channelIds = role === 'ads' ? [] : [...new Set([...prior.channelIds, ...channelIds])]
-    else g.assignments.push({ userId, role, channelIds: role === 'ads' ? [] : [...channelIds], adAccountIds: [] })
+    if (prior) {
+      if (role === 'ads') prior.adAccountIds = [...new Set([...prior.adAccountIds, ...adAccountIds])]
+      else prior.channelIds = [...new Set([...prior.channelIds, ...channelIds])]
+    } else g.assignments.push({ userId, role, channelIds: role === 'ads' ? [] : [...channelIds], adAccountIds: role === 'ads' ? [...adAccountIds] : [] })
   }
-  audit(s, actorId, 'Group role assigned', `${g.name}: ${role} for ${userIds.length} person(s), ${role === 'ads' ? 0 : channelIds.length} channel(s).`)
+  audit(s, actorId, 'Group role assigned', `${g.name}: ${role} for ${userIds.length} person(s), ${role === 'ads' ? `${adAccountIds.length} ad account(s)` : `${channelIds.length} channel(s)`}.`)
   persist()
   return wait(true)
 }
 
-export function updateGroupRole(actorId: string, groupId: string, userId: string, role: GroupRole, channelIds: string[]) {
+export function updateGroupRole(actorId: string, groupId: string, userId: string, role: GroupRole, channelIds: string[], adAccountIds: string[] = []) {
   const s = db()
   const g = loadGroup(s, actorId, groupId, 'edit')
   const a = g.assignments.find((x) => x.userId === userId && x.role === role)
   if (!a) throw new ApiError('Assignment not found.')
-  const linked = new Set(s.accounts.filter((x) => x.assetGroupId === g.id).map((x) => x.id))
-  if (channelIds.some((c) => !linked.has(c))) throw new ApiError('Only channels linked to this group can be selected.')
-  if (role !== 'ads' && !channelIds.length) throw new ApiError('Keep at least one channel, or remove the role.')
-  a.channelIds = role === 'ads' ? [] : channelIds
-  audit(s, actorId, 'Group role channels changed', `${g.name}: ${role}, ${channelIds.length} channel(s).`)
+  if (role === 'ads') {
+    const linkedAds = new Set(s.adAccounts.filter((x) => x.assetGroupId === g.id).map((x) => x.id))
+    if (adAccountIds.some((x) => !linkedAds.has(x))) throw new ApiError('Only ad accounts linked to this group can be selected.')
+    if (!adAccountIds.length) throw new ApiError('Keep at least one ad account, or remove the role.')
+    a.adAccountIds = adAccountIds
+    audit(s, actorId, 'Group role ad accounts changed', `${g.name}: ads, ${adAccountIds.length} ad account(s).`)
+  } else {
+    const linked = new Set(s.accounts.filter((x) => x.assetGroupId === g.id).map((x) => x.id))
+    if (channelIds.some((c) => !linked.has(c))) throw new ApiError('Only channels linked to this group can be selected.')
+    if (!channelIds.length) throw new ApiError('Keep at least one channel, or remove the role.')
+    a.channelIds = channelIds
+    audit(s, actorId, 'Group role channels changed', `${g.name}: ${role}, ${channelIds.length} channel(s).`)
+  }
   persist()
   return wait(true)
 }

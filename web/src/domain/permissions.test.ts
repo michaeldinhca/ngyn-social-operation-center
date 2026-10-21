@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { canViewAccount, hasAccountFunction, hasFunction, type AccessContext } from './permissions'
-import type { AssetGroup, SocialAccount, User } from './types'
+import { canViewAccount, canViewAdAccount, hasAccountFunction, hasAdAccountFunction, hasFunction, type AccessContext } from './permissions'
+import type { AdAccount, AssetGroup, SocialAccount, User } from './types'
 
 const account = (id: string, group: string | null): SocialAccount => ({
   id,
@@ -78,5 +78,42 @@ describe('permissions', () => {
   it('suspended users have no access', () => {
     const u = user({ status: 'Suspended', functions: ['content.create'], channels: ['a1'] })
     expect(hasFunction({ isAdmin: false, user: u }, 'content.create', ctx())).toBe(false)
+  })
+
+  describe('ad accounts', () => {
+    const ad = (id: string, group: string | null): AdAccount => ({ id, name: id, network: 'Meta', assetGroupId: group, limitCents: 100000, createdAt: '' })
+    const adCtx = (groups: AssetGroup[] = []): AccessContext => ({ ...ctx(groups), adAccounts: [ad('ad1', 'g1'), ad('ad2', 'g1'), ad('ad3', 'g2')] })
+
+    it('needs the function and an explicit ad account assignment', () => {
+      const u = user({ functions: ['ads.create'], adAccounts: ['ad1'] })
+      const actor = { isAdmin: false, user: u }
+      expect(hasAdAccountFunction(actor, 'ads.create', 'ad1', adCtx())).toBe(true)
+      expect(hasAdAccountFunction(actor, 'ads.create', 'ad2', adCtx())).toBe(false)
+      expect(hasAdAccountFunction(actor, 'ads.manage', 'ad1', adCtx())).toBe(false)
+    })
+
+    it('a function grant alone reveals no ad account', () => {
+      expect(canViewAdAccount({ isAdmin: false, user: user({ functions: ['ads.create', 'ads.manage'] }) }, 'ad1', adCtx())).toBe(false)
+    })
+
+    it('a group ad-manager role covers only the selected ad accounts of that group', () => {
+      const g = [group('g1', [{ userId: 'u1', role: 'ads', channelIds: [], adAccountIds: ['ad1'] }])]
+      const actor = { isAdmin: false, user: user() }
+      expect(hasAdAccountFunction(actor, 'ads.manage', 'ad1', adCtx(g))).toBe(true)
+      expect(hasAdAccountFunction(actor, 'ads.manage', 'ad2', adCtx(g))).toBe(false)
+      expect(hasAdAccountFunction(actor, 'ads.manage', 'ad3', adCtx(g))).toBe(false)
+    })
+
+    it('unlinking the ad account from the group ends the group role on it', () => {
+      const g = [group('g1', [{ userId: 'u1', role: 'ads', channelIds: [], adAccountIds: ['ad1'] }])]
+      const c = adCtx(g)
+      c.adAccounts![0] = ad('ad1', null)
+      expect(canViewAdAccount({ isAdmin: false, user: user() }, 'ad1', c)).toBe(false)
+    })
+
+    it('a content creator role grants nothing on ad accounts', () => {
+      const g = [group('g1', [{ userId: 'u1', role: 'creator', channelIds: ['a1'], adAccountIds: ['ad1'] }])]
+      expect(canViewAdAccount({ isAdmin: false, user: user() }, 'ad1', adCtx(g))).toBe(false)
+    })
   })
 })

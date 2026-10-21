@@ -1,4 +1,4 @@
-import type { AssetGroup, FunctionId, GroupRole, SocialAccount, User } from './types'
+import type { AdAccount, AssetGroup, FunctionId, GroupRole, SocialAccount, User } from './types'
 
 // Access rules (see docs/handoff/CLAUDE_HANDOFF.md, "Domain and access rules"):
 // - Function permissions and account assignments are separate; both are required.
@@ -15,6 +15,8 @@ export const GROUP_ROLE_FUNCTIONS: Record<GroupRole, FunctionId[]> = {
 export interface AccessContext {
   groups: AssetGroup[]
   accounts: SocialAccount[]
+  /** Optional: only needed for ad account checks. */
+  adAccounts?: AdAccount[]
 }
 
 export interface Actor {
@@ -63,6 +65,31 @@ export function canViewAccount(actor: Actor, accountId: string, ctx: AccessConte
   return groupAssignments(user, ctx).some(
     (a) => a.role !== 'ads' && a.groupId === account.assetGroupId && a.channelIds.includes(accountId),
   )
+}
+
+/**
+ * Function AND ad account. A function grant alone never reveals or authorizes an ad account.
+ * Group ad-manager roles cover only the ad accounts explicitly selected, and only while the
+ * ad account is still linked to that group.
+ */
+export function hasAdAccountFunction(actor: Actor, fn: FunctionId, adAccountId: string, ctx: AccessContext): boolean {
+  if (actor.isAdmin) return true
+  const user = actor.user
+  if (!user || user.status !== 'Active') return false
+  if (user.functions.includes(fn) && user.adAccounts.includes(adAccountId)) return true
+  const ad = ctx.adAccounts?.find((a) => a.id === adAccountId)
+  if (!ad) return false
+  return groupAssignments(user, ctx).some((a) => a.role === 'ads' && a.groupId === ad.assetGroupId && a.adAccountIds.includes(adAccountId) && GROUP_ROLE_FUNCTIONS.ads.includes(fn))
+}
+
+export function canViewAdAccount(actor: Actor, adAccountId: string, ctx: AccessContext): boolean {
+  if (actor.isAdmin) return true
+  const user = actor.user
+  if (!user || user.status !== 'Active') return false
+  if (user.adAccounts.includes(adAccountId)) return true
+  const ad = ctx.adAccounts?.find((a) => a.id === adAccountId)
+  if (!ad) return false
+  return groupAssignments(user, ctx).some((a) => a.role === 'ads' && a.groupId === ad.assetGroupId && a.adAccountIds.includes(adAccountId))
 }
 
 export function visibleAccounts(actor: Actor, ctx: AccessContext): SocialAccount[] {

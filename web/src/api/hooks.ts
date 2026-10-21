@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { Network } from '@/domain/types'
 import * as api from '@/mock/api'
+import * as ads from '@/mock/api-ads'
+import * as analytics from '@/mock/api-analytics'
 import * as assets from '@/mock/api-assets'
+import * as users from '@/mock/api-users'
 import * as content from '@/mock/api-content'
 import * as media from '@/mock/api-media'
 import { getBlob } from '@/mock/blobs'
@@ -149,4 +152,39 @@ export function useBlobUrl(blobId: string | null | undefined) {
 export function useBrief(groupId: string, setId: string | null) {
   const actorId = useActor()
   return useQuery({ queryKey: ['brief', actorId, groupId, setId], queryFn: () => assets.briefPreview(actorId, groupId, setId!), enabled: !!setId, retry: false })
+}
+
+export function useAds() {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['ads', actorId], queryFn: () => ads.adsOverview(actorId), retry: false })
+}
+
+export function useCampaign(id: string | null) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['campaign', actorId, id], queryFn: () => ads.getCampaign(actorId, id!), enabled: !!id && id !== 'new', retry: false })
+}
+
+export function useCampaignForm() {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['campaign-form', actorId], queryFn: () => ads.campaignFormContext(actorId), retry: false })
+}
+
+export function useAnalytics(q: analytics.AnalyticsQuery) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['analytics', actorId, q], queryFn: () => analytics.getAnalytics(actorId, q), placeholderData: (prev) => prev, retry: false })
+}
+
+export function useStaff() {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['staff', actorId], queryFn: () => users.listStaff(actorId), retry: false })
+}
+
+export function useStaffMember(id: string | null) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['staff-member', actorId, id], queryFn: () => users.getStaff(actorId, id!), enabled: !!id, retry: false })
+}
+
+export function useAudit(f: users.AuditFilters) {
+  const actorId = useActor()
+  return useQuery({ queryKey: ['audit', actorId, f], queryFn: () => users.listAudit(actorId, f), placeholderData: (prev) => prev, retry: false })
 }

@@ -296,6 +296,56 @@ export interface EmergencyState {
   changedBy: string | null
 }
 
+export type AdNetwork = 'Meta' | 'Google' | 'LinkedIn' | 'X'
+export const AD_NETWORKS: AdNetwork[] = ['Meta', 'Google', 'LinkedIn', 'X']
+
+/** A mock ad account. No real account, payment method or spend exists anywhere in the mockup. */
+export interface AdAccount {
+  id: string
+  name: string
+  network: AdNetwork
+  /** Linking to an Asset Group grants nobody access. */
+  assetGroupId: string | null
+  /** Simulated planning limit in cents (CAD). Not a platform or bank limit. */
+  limitCents: number
+  createdAt: string
+}
+
+export type CampaignStatus = 'Draft' | 'In review' | 'Approved'
+export type CampaignObjective = 'Awareness' | 'Service announcement' | 'Event promotion' | 'Traffic' | 'Engagement'
+export const OBJECTIVES: CampaignObjective[] = ['Awareness', 'Service announcement', 'Event promotion', 'Traffic', 'Engagement']
+
+export interface CampaignEvent {
+  id: string
+  at: string
+  actor: string
+  action: 'Created' | 'Edited' | 'Submitted' | 'Approved' | 'Returned' | 'Launch blocked'
+  note?: string
+}
+
+export interface AdCampaign {
+  id: string
+  name: string
+  adAccountId: string
+  objective: CampaignObjective
+  headline: string
+  body: string
+  /** Optional approved post the ad is based on. */
+  postId: string | null
+  audience: { area: string; ageMin: number; ageMax: number; language: 'English' | 'French' | 'Bilingual'; interests: string[] }
+  /** Day keys, YYYY-MM-DD (Halifax). */
+  startDay: string
+  endDay: string
+  dailyBudgetCents: number
+  status: CampaignStatus
+  reviewNote: string | null
+  /** Always 0 in the mockup: spending is disabled. */
+  spentCents: number
+  history: CampaignEvent[]
+  createdBy: string
+  createdAt: string
+}
+
 export type MediaStatus = 'Needs review' | 'Approved' | 'Rejected'
 
 export interface MediaVersion {
@@ -340,7 +390,7 @@ export interface MediaAsset {
 }
 
 export interface DemoState {
-  version: 3
+  version: 4
   seededAt: string
   users: User[]
   accounts: SocialAccount[]
@@ -348,6 +398,8 @@ export interface DemoState {
   archivedGroups: ArchivedGroup[]
   media: MediaAsset[]
   mediaFolders: MediaFolder[]
+  adAccounts: AdAccount[]
+  campaigns: AdCampaign[]
   posts: Post[]
   conversations: Conversation[]
   topics: ListeningTopic[]

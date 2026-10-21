@@ -12,7 +12,7 @@ export const nowISO = () => new Date().toISOString()
 export const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 9)}`
 
 export function ctx(s: DemoState): AccessContext {
-  return { groups: s.groups, accounts: s.accounts }
+  return { groups: s.groups, accounts: s.accounts, adAccounts: s.adAccounts }
 }
 
 export function actorOf(s: DemoState, actorId: string): Actor {
