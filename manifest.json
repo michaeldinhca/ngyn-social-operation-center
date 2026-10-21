@@ -1,0 +1,134 @@
+{
+  "product": "NGYN Municipal Social Platform",
+  "snapshotDate": "2026-10-21",
+  "baseCommit": "1f07ce2e890ec8b1fe1e96a56da371e23809f17a",
+  "includesUncommittedGroupVisibilityFix": true,
+  "entry": "NGYN_Municipal_Social_Platform.html",
+  "bytes": 284177,
+  "sha256": "010a4b84d18e82b5127f107cc444c36a7fff2324c5c68783a50e24831eecd4e9",
+  "externalDependencies": [
+    "Unsplash image URLs only; no social API or AI calls"
+  ],
+  "embedded": [
+    {
+      "file": "styles.css",
+      "kind": "css",
+      "sha256": "5f4ac3492df71bdcc2b0d22ae6bf072bb054c533983eefe977d0891db2d3584d"
+    },
+    {
+      "file": "direction.css",
+      "kind": "css",
+      "sha256": "2084b2b0ca4472a50a587e44e95bbe94b6c76f203e76c06e5f36ca600781c145"
+    },
+    {
+      "file": "groups.css",
+      "kind": "css",
+      "sha256": "1fbf9834864413703be07915fd344e9fb74ec851ffc3dee50b5c755012d4cd91"
+    },
+    {
+      "file": "users.css",
+      "kind": "css",
+      "sha256": "3fca29fddf94f60ee4b29dc3b955e47c9dc081121e71d322aa1df0ae4e121543"
+    },
+    {
+      "file": "assets.css",
+      "kind": "css",
+      "sha256": "fb524b6910f375d8daca408025b14c51de8a7c47b957b80466332473a2b5c293"
+    },
+    {
+      "file": "operations.css",
+      "kind": "css",
+      "sha256": "c179897aa39f996cbfe5eed9e68b8b23fc6a1cecdf8713e65a95ac5223150584"
+    },
+    {
+      "file": "navigation.css",
+      "kind": "css",
+      "sha256": "fee193beb9ce30f1c94573af46572c2b3b9f0d5e5b89281bf4d4e854aec56b57"
+    },
+    {
+      "file": "composer.css",
+      "kind": "css",
+      "sha256": "a92935451fc62f148d5c77c5275faa0a63f56deb403a7b3e462b734d4c3dca6c"
+    },
+    {
+      "file": "media-storage.css",
+      "kind": "css",
+      "sha256": "06d977e49a47fab5988b04dc4ded4731fc853c782edda168b73bd8331386f66b"
+    },
+    {
+      "file": "soc-dashboard.css",
+      "kind": "css",
+      "sha256": "01121705ca648c1e7c8c9cd81351054864d3cb7bc6ac21a3c9779e7fbfd33c35"
+    },
+    {
+      "file": "app.js",
+      "kind": "js",
+      "sha256": "87c2bffd203df0c1d2b0fd133a6829addd8204fe6a0ab2eb4d6dc2555218d9d9"
+    },
+    {
+      "file": "direction.js",
+      "kind": "js",
+      "sha256": "4ced6ebfa075b8ccdb05b0b63793e1040273a4b087bc6788fd803f891d543218"
+    },
+    {
+      "file": "groups.js",
+      "kind": "js",
+      "sha256": "87d0bb5278a2b15271bb9e866533981c4fab63e3c35facbfb65a5c17645bfbc4"
+    },
+    {
+      "file": "users.js",
+      "kind": "js",
+      "sha256": "d57275c6d46e3ad4b5220da2bd6790591e3bf9611b79f3c3e3b1d8e363861a28"
+    },
+    {
+      "file": "assets.js",
+      "kind": "js",
+      "sha256": "a291d52f11d14d2878f63908c0642fb27d289e64d3e302887f773811cff593e3"
+    },
+    {
+      "file": "operations.js",
+      "kind": "js",
+      "sha256": "2178bcbd9cc02b0aa026f05e06f24416c3064541bac62155761fd84ec259d1b1"
+    },
+    {
+      "file": "navigation.js",
+      "kind": "js",
+      "sha256": "7a47159197f134e684fb804cf907ec5d400a143b30c1e1ef29bb9b86fb62119d"
+    },
+    {
+      "file": "channels.js",
+      "kind": "js",
+      "sha256": "5045970a9f3646b7914453d5757df44196799fa829139eaf07f0bbea70f1bf38"
+    },
+    {
+      "file": "brand-packages.js",
+      "kind": "js",
+      "sha256": "63676b7e0bc8b1192bc6d7b3d1e5baba5dd4a0f5e1cb9260accf4a04cf4ec40d"
+    },
+    {
+      "file": "composer.js",
+      "kind": "js",
+      "sha256": "8c5af3304e53c2c4d7210732f20f72bf56ec95c54fcdbe77d6a8d0a2882ea28a"
+    },
+    {
+      "file": "media-storage.js",
+      "kind": "js",
+      "sha256": "c1f55bc33ecacc566cd401f47b1cf08842acb5852e7d925e502516a258c10c87"
+    },
+    {
+      "file": "brand-voice.js",
+      "kind": "js",
+      "sha256": "ef243561b5efae144fd72084e0f0dc20e7cb7d25e27a792b861fd0293b453207"
+    },
+    {
+      "file": "group-people.js",
+      "kind": "js",
+      "sha256": "ad9b276dc05d9aa2dfc208e230ef4476a79d5a0be80f7037f7a305eebec9b1cb"
+    },
+    {
+      "file": "soc-dashboard.js",
+      "kind": "js",
+      "sha256": "957c83faf14bedb864c7e71a679dd23d9d2b4610c73eece08869f887bbaa7a69"
+    }
+  ]
+}
