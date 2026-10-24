@@ -313,7 +313,9 @@ export function CampaignEditor({ id, onBack }: { id: string; onBack: (open?: str
               </div>
             )}
             <div className="mt-4">
-              {guard.ok ? (
+              {!editable ? (
+                <p className="text-sm text-muted">{row?.status === 'Approved' ? 'Approved. Approval does not authorize spend.' : 'Waiting for review. Editing is locked.'}</p>
+              ) : guard.ok ? (
                 <p className="flex items-center gap-2 text-sm text-good">
                   <CheckCircle2 className="size-4" /> Ready to submit for approval.
                 </p>

@@ -47,7 +47,7 @@ export function AdsPage() {
     )
   }
   if (!d) return <Skeleton className="h-96" />
-  if (open) return <CampaignEditor id={open} onBack={() => go()} />
+  if (open) return <CampaignEditor id={open} onBack={(next) => go(next)} />
 
   const rows = d.campaigns.filter((c) => status === 'All' || c.status === status)
   const needs = d.campaigns.filter((c) => c.actions.includes('approve')).length

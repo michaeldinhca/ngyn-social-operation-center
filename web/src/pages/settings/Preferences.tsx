@@ -1,4 +1,5 @@
 import { Moon, RotateCcw, Sun } from 'lucide-react'
+import { useId } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge, Card, CardHeader, PageHeader } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
@@ -7,15 +8,16 @@ import { useSession, useSessionContext, type Preferences } from '@/session'
 const DEFAULTS: Preferences = { theme: 'dark', size: 'standard', contrast: false, motion: false, focus: true }
 
 function Switch({ checked, onChange, label, description }: { checked: boolean; onChange: (v: boolean) => void; label: string; description: string }) {
+  const id = useId()
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-3">
       <div>
-        <p className="text-sm font-medium" id={`sw-${label}`}>
+        <p className="text-sm font-medium" id={id}>
           {label}
         </p>
         <p className="text-[0.8125rem] text-muted">{description}</p>
       </div>
-      <button type="button" role="switch" aria-checked={checked} aria-labelledby={`sw-${label}`} onClick={() => onChange(!checked)} className={cn('relative h-6 w-11 shrink-0 rounded-full transition-colors', checked ? 'bg-accent-strong' : 'bg-surface-3')}>
+      <button type="button" role="switch" aria-checked={checked} aria-labelledby={id} onClick={() => onChange(!checked)} className={cn('relative h-6 w-11 shrink-0 rounded-full transition-colors', checked ? 'bg-accent-strong' : 'bg-surface-3')}>
         <span className={cn('absolute top-0.5 size-5 rounded-full bg-white shadow transition-all', checked ? 'left-[1.375rem]' : 'left-0.5')} />
       </button>
     </div>

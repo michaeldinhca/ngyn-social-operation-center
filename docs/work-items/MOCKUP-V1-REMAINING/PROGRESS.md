@@ -1,8 +1,8 @@
 # Progress log: MOCKUP-V1 sections 3, 4 and 5
 
-- Status: **PAUSED by the Product Director, 2026-10-21.** Code is written but **not yet browser-tested** and not reviewed.
+- Status: **COMPLETE, 2026-10-24.** Sections 3 to 5 were finished, browser-tested and reported. See `BUILD-REPORT.md` in this folder. The notes below record the pause on 2026-10-21 and are kept for history.
 - Instruction before the pause: "continue build for all other pages, I will comment later".
-- State: `IN_PROGRESS` (nothing here is `BUILT_AWAITING_REVIEW` yet).
+- State: `BUILT_AWAITING_REVIEW`
 
 ## What exists (all 13 menu screens now have a real page; none are placeholders)
 

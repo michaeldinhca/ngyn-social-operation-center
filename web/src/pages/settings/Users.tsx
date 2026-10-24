@@ -143,12 +143,15 @@ export function UsersPage() {
                       <span className="block truncate text-xs text-muted">{u.email}</span>
                     </span>
                   </span>
-                  <span className="text-sm text-text-2 md:order-none">{u.role}</span>
-                  <span className="text-sm text-text-2">{u.department}</span>
-                  <span className="tabular text-sm text-text-2">{u.functions.length}</span>
-                  <span className={cn('tabular text-sm', u.role !== 'Administrator' && u.status === 'Active' && u.effectiveChannels === 0 ? 'text-warn' : 'text-text-2')}>{u.role === 'Administrator' ? 'All' : u.effectiveChannels}</span>
-                  <span>
+                  <span className="hidden text-sm text-text-2 md:block">{u.role}</span>
+                  <span className="hidden text-sm text-text-2 md:block">{u.department}</span>
+                  <span className="tabular hidden text-sm text-text-2 md:block">{u.functions.length}</span>
+                  <span className={cn('tabular hidden text-sm md:block', u.role !== 'Administrator' && u.status === 'Active' && u.effectiveChannels === 0 ? 'text-warn' : 'text-text-2')}>{u.role === 'Administrator' ? 'All' : u.effectiveChannels}</span>
+                  <span className="self-start md:self-auto">
                     <Badge tone={STATUS_TONE[u.status]}>{u.status}</Badge>
+                  </span>
+                  <span className="col-span-2 text-[0.8125rem] text-muted md:hidden">
+                    {u.role} · {u.department} · {u.functions.length} function{u.functions.length === 1 ? '' : 's'} · {u.role === 'Administrator' ? 'all channels' : `${u.effectiveChannels} channel${u.effectiveChannels === 1 ? '' : 's'}`}
                   </span>
                 </button>
               </li>

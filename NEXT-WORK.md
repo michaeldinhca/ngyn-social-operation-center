@@ -8,6 +8,7 @@ Parallel work limit: 1
 
 - 2026-10-21: "Continue build for all other pages, I will comment later." Sections 3 to 5 are being built without a stop between them.
 - 2026-10-21: "Pause for now, log the progress." Work paused; see `docs/work-items/MOCKUP-V1-REMAINING/PROGRESS.md`.
+- 2026-10-24: "At 2 pm, do anything that left." Sections 3 to 5 were finished and tested at 2 pm. All 13 screens are now rebuilt.
 - 2026-10-21: "Rebuild all pages of Social Channels & Content, it is important." Stops 2b and 2c were built together and are reviewed together.
 - 2026-10-21: "Build the UI interaction mockup first." Backend work waits. The rebuild uses the frontend part of ADR 0001 (React + Vite SPA with a mock adapter) in `web/`. The v0 prototype stays as the reference.
 - 2026-10-21: Review **section by section**. The agent builds one menu section, reports, and stops for comments before starting the next.
@@ -17,7 +18,7 @@ Parallel work limit: 1
 
 | Work-item ID | Work | State | Owner |
 | --- | --- | --- | --- |
-| `MOCKUP-V1-REBUILD` § 3 to § 5 | Advertising, Analytics & Reports, Settings. Log: `docs/work-items/MOCKUP-V1-REMAINING/PROGRESS.md` | `IN_PROGRESS` (PAUSED by the Director 2026-10-21; code written, not browser-tested) | Claude |
+| `MOCKUP-V1-REBUILD` § 3 to § 5 | Advertising, Analytics & Reports, Settings. Report: `docs/work-items/MOCKUP-V1-REMAINING/BUILD-REPORT.md` | `BUILT_AWAITING_REVIEW` | Claude |
 
 ## Rebuild sections (review one at a time)
 
@@ -27,9 +28,9 @@ Parallel work limit: 1
 | 2a | Social Channels + Asset Groups | Connections, capabilities, linking, group roles, brand direction, brand voices, delete | `BUILT_AWAITING_REVIEW` |
 | 2b | All Content + Composer + Publishing Calendar | Approval workflow, per-network composer, month/week/list calendar with reschedule | `BUILT_AWAITING_REVIEW` |
 | 2c | Media Storage | Library, browser uploads, review, versions, trash, composer reuse | `BUILT_AWAITING_REVIEW` |
-| 3 | Advertising | Campaigns, campaign editor with simulated budget and no-spend guard, ad accounts | `IN_PROGRESS` (written, untested in browser) |
-| 4 | Insights | Analytics & Reports with SAMPLE-watermarked CSV and PDF export | `IN_PROGRESS` (written, untested in browser) |
-| 5 | Settings | Users & Access, Activity Log, My Preferences | `IN_PROGRESS` (written, untested in browser) |
+| 3 | Advertising | Campaigns, campaign editor with simulated budget and no-spend guard, ad accounts | `BUILT_AWAITING_REVIEW` |
+| 4 | Insights | Analytics & Reports with SAMPLE-watermarked CSV and PDF export | `BUILT_AWAITING_REVIEW` |
+| 5 | Settings | Users & Access, Activity Log, My Preferences | `BUILT_AWAITING_REVIEW` |
 
 ## Waiting on the Product Director
 
@@ -46,7 +47,7 @@ Parallel work limit: 1
 
 ## Latest handoff
 
-- Next actor: Claude, when the Director says to resume
-- Required action: resume at "Next steps" in the progress log (run the browser dry-run first, then test the new screens).
-- Evidence at the pause: typecheck clean, 60/60 unit, build succeeds. Browser dry-run NOT run for sections 3 to 5, and not re-run for sections 1 and 2 since the changes.
-- Stop condition: nothing from sections 3 to 5 is reviewable until the dry-run passes and a build report exists.
+- Next actor: Product Director
+- Required action: review all five sections (every menu screen is rebuilt) and answer the questions in the four build reports: `MOCKUP-V1-ENGAGEMENT`, `MOCKUP-V1-CHANNELS-GROUPS`, `MOCKUP-V1-CONTENT-MEDIA` and `MOCKUP-V1-REMAINING`. Decide `MOCKUP-V0-DEPLOY` (host for a shareable preview) and `STACK-DECISION-001`.
+- Evidence: typecheck clean, 60/60 unit, 193/193 browser dry-run, zero page errors, screenshots in `.dry-run/web/`.
+- Stop condition: no deployment, hosted preview or vendor signup until approved here.

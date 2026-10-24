@@ -1,5 +1,5 @@
 import { BarChart3, Download, FileSpreadsheet, FileText, Info } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useAction, useAnalytics } from '@/api/hooks'
 import { DataTable, LineChart } from '@/components/charts/charts'
@@ -41,6 +41,13 @@ export function AnalyticsPage() {
   const q = useAnalytics({ range, network, department })
   const record = useAction(api.recordExport)
   const r = q.data
+
+  // A filter chosen for someone else (after "View as") may not exist for this person: fall back to All.
+  useEffect(() => {
+    if (!r) return
+    if (department !== 'All' && !r.options.departments.includes(department)) setDepartment('All')
+    if (network !== 'All' && !r.options.networks.includes(network)) setNetwork('All')
+  }, [r, department, network])
 
   const accounts = useMemo(() => {
     if (!r) return []
