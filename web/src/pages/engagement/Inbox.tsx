@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { ArrowLeft, ExternalLink, Inbox as InboxIcon, Info, MessageSquare, Search, Sparkles } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Inbox as InboxIcon, Info, MessageSquare, Search, SlidersHorizontal, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useAction, useConversation, useConversations, useUsers } from '@/api/hooks'
@@ -11,6 +11,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { CATEGORIES, NETWORKS, type Category, type Network, type Sentiment } from '@/domain/types'
 import { cn, formatDateTime, relativeTime, signed } from '@/lib/utils'
 import * as api from '@/mock/api'
+import { useSessionContext } from '@/session'
 
 const SENTIMENTS: Sentiment[] = ['Negative', 'Concerned', 'Neutral', 'Positive']
 
@@ -42,6 +43,7 @@ export function InboxPage() {
     sort: 'negative',
   }))
   const [selected, setSelected] = useState<string | null>(search.c ?? null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [mobileDetail, setMobileDetail] = useState(!!search.c)
   const list = useConversations(filters)
   const rows = list.data?.rows
@@ -85,7 +87,16 @@ export function InboxPage() {
         actions={<SimBadge>Fictional conversations · no replies sent</SimBadge>}
       />
 
-      <Card className="mb-4 grid grid-cols-2 gap-3 p-4 md:grid-cols-4 xl:grid-cols-5">
+      <div className="mb-3 flex items-center gap-2 md:hidden">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+          <Input aria-label="Search conversations" value={filters.search} onChange={(e) => set('search', e.target.value)} placeholder="Text, author or ID" className="pl-9" />
+        </div>
+        <Button aria-expanded={filtersOpen} onClick={() => setFiltersOpen((o) => !o)}>
+          <SlidersHorizontal /> Filters
+        </Button>
+      </div>
+      <Card className={cn('mb-4 grid grid-cols-2 gap-3 p-4 md:grid md:grid-cols-4 xl:grid-cols-5', !filtersOpen && 'hidden')}>
         <Field label="Network">
           {(id) => (
             <Select id={id} value={filters.network} onChange={(e) => set('network', e.target.value as Network | 'All')}>
@@ -157,7 +168,7 @@ export function InboxPage() {
             </Select>
           )}
         </Field>
-        <Field label="Search" className="col-span-2 md:col-span-4 xl:col-span-2">
+        <Field label="Search" className="col-span-2 hidden md:col-span-4 md:block xl:col-span-2">
           {(id) => (
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
@@ -172,7 +183,7 @@ export function InboxPage() {
           You have inbox permission, but no channel is assigned to you. An administrator must assign channels before you can read conversations.
         </EmptyState>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(320px,400px)_1fr]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(280px,340px)_1fr]">
           <section className={cn('min-w-0', mobileDetail && 'hidden lg:block')} aria-label="Conversations">
             <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[0.8125rem] text-muted">
               <span className="font-medium text-text-2">{counts.total} conversations</span>
@@ -227,6 +238,7 @@ export function InboxPage() {
 
 function ConversationPanel({ id }: { id: string }) {
   const q = useConversation(id)
+  const { actorId } = useSessionContext()
   const [routing, setRouting] = useState<{ ownerId: string | null; sentiment: Sentiment; category: Category } | null>(null)
   const [note, setNote] = useState('')
   const [reply, setReply] = useState('')
@@ -251,6 +263,7 @@ function ConversationPanel({ id }: { id: string }) {
 
   if (!q.data || !c || !routing) return <Skeleton className="h-[36rem]" />
   const { post, eligibleOwners } = q.data
+  const canClaim = eligibleOwners.some((o) => o.id === actorId && o.eligible)
   const dirty = routing.ownerId !== c.ownerId || routing.sentiment !== c.sentiment || routing.category !== c.category
   const resolved = c.status === 'Resolved'
 
@@ -278,7 +291,7 @@ function ConversationPanel({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="grid gap-0 xl:grid-cols-[1fr_320px]">
+      <div className="grid gap-0 2xl:grid-cols-[1fr_300px]">
         <div className="min-w-0 space-y-5 p-5">
           {post && (
             <p className="rounded-lg bg-surface-2 px-3 py-2 text-[0.8125rem] text-text-2">
@@ -333,9 +346,11 @@ function ConversationPanel({ id }: { id: string }) {
                 <Button
                   variant="primary"
                   onClick={() => {
-                    if (!c.ownerId) return toast.error('Assign and save a response owner first.')
                     if (!reply.trim()) return toast.error('Write a reply before review.')
-                    setReviewOpen(true)
+                    if (c.ownerId) return setReviewOpen(true)
+                    // No owner yet: claim it for the person resolving, when they are allowed to own it.
+                    if (!canClaim) return toast.error('This needs a response owner, and you can’t own it. Choose someone with channel access under Response owner.')
+                    saveRouting.mutate([c.id, { ownerId: actorId, sentiment: routing.sentiment, category: routing.category }], { onSuccess: () => setReviewOpen(true) })
                   }}
                 >
                   Review & resolve
@@ -368,7 +383,7 @@ function ConversationPanel({ id }: { id: string }) {
           </div>
         </div>
 
-        <aside className="space-y-5 border-t border-border p-5 xl:border-l xl:border-t-0" aria-label="Routing and classification">
+        <aside className="space-y-5 border-t border-border p-5 2xl:border-l 2xl:border-t-0" aria-label="Routing and classification">
           <div className="rounded-lg border border-border p-3.5">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[0.8125rem] font-semibold">Classifier signal</p>
@@ -381,7 +396,7 @@ function ConversationPanel({ id }: { id: string }) {
             <p className="mt-2 text-xs text-muted">{c.ai.source}. Uncertain; staff decide.</p>
           </div>
 
-          <Field label="Response owner" hint="Only people with inbox permission on this channel can own it.">
+          <Field label="Response owner" hint="Only people with inbox permission on this channel can own it. Resolving claims it for you if it has no owner.">
             {(fid) => (
               <Select id={fid} value={routing.ownerId ?? ''} onChange={(e) => setRouting({ ...routing, ownerId: e.target.value || null })}>
                 <option value="">Unassigned</option>
@@ -394,6 +409,11 @@ function ConversationPanel({ id }: { id: string }) {
               </Select>
             )}
           </Field>
+          {canClaim && c.ownerId !== actorId && !resolved && (
+            <Button className="w-full" disabled={saveRouting.isPending} onClick={() => saveRouting.mutate([c.id, { ownerId: actorId, sentiment: routing.sentiment, category: routing.category }])}>
+              Assign to me
+            </Button>
+          )}
           <Field label="Sentiment (staff override)">
             {(fid) => (
               <Select id={fid} value={routing.sentiment} onChange={(e) => setRouting({ ...routing, sentiment: e.target.value as Sentiment })}>

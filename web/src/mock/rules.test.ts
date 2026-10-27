@@ -84,3 +84,30 @@ describe('administrator access is a function, not a role label', () => {
     await expect(call(() => users.updateStaff('admin', 'user-0', patch))).resolves.toBeGreaterThan(0)
   })
 })
+
+describe('viewer, linked approval and composer readiness', () => {
+  it('a viewer can read posts on assigned channels but not change anything', async () => {
+    const v = db().users.find((u) => u.role === 'Viewer' && u.status === 'Active' && u.channels.length)!
+    const r = await content.listPosts(v.id, { network: 'All', status: 'All', group: 'All', q: '' })
+    expect(r.rows.length).toBeGreaterThan(0)
+    expect(r.rows.every((x) => x.actions.length === 0)).toBe(true)
+    expect(r.canCreate).toBe(false)
+  })
+
+  it('approve all linked approves each in-review copy the actor may approve', async () => {
+    const [a, b] = db().posts.filter((p) => p.status === 'In review').slice(0, 2)
+    b.batchId = a.batchId
+    const r = await content.approveLinked('admin', a.id)
+    expect(r.approved).toBe(2)
+    expect(db().posts.find((p) => p.id === b.id)!.status).toBe('Approved')
+  })
+
+  it('a rejected submit names every channel that is not ready', async () => {
+    const accounts = db().accounts.filter((x) => x.department === 'Public Works').slice(0, 2)
+    const ids = accounts.map((x) => x.id)
+    const variants = Object.fromEntries(ids.map((id) => [id, { text: '', comment: '', format: 'Feed' as const }]))
+    const err = await call(() => content.saveComposer('admin', { batchId: null, channelIds: ids, title: '', variants, photo: 0, mediaId: null, alt: '', assetGroupId: null, guidelineId: null, submit: true })).catch((e: Error) => e)
+    expect(err).toBeInstanceOf(Error)
+    for (const a of accounts) expect((err as Error).message).toContain(a.name)
+  })
+})

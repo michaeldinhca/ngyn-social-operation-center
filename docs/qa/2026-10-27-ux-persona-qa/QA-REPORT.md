@@ -289,7 +289,28 @@ Reading: the product works. What hurts is friction a real municipal staff member
 
 ## Fixes Applied
 
-None. This was a report-only run (/qa-only).
+The QA run itself changed nothing. The Director then said "fix everything" (2026-10-27), and all 14 issues were fixed in a separate pass, `QA-UX-FIX-001`. Evidence: typecheck clean, 78/78 unit tests (3 new), 220/220 browser dry-run (14 new `qa:` checks), zero page errors.
+
+| Issue | Fix | Files | Verified by |
+|---|---|---|---|
+| ISSUE-001 | Submit is checked at the form first: a red "Before you can submit" list scrolls into view, missing fields are outlined (`aria-invalid`), and every selected channel is named. The API also lists every channel that isn't ready, not just the first | `Composer.tsx`, `api-content.ts` | dry-run `qa: submit lists what is missing...`; unit `a rejected submit names every channel` |
+| ISSUE-002 | Action bar is opaque with a top shadow; its note is one line and hidden below 1024 px | `Composer.tsx` | screenshot `qa-composer-needs.png` |
+| ISSUE-003 | Inbox detail stacks the classifier and owner panel below the reply until 1536 px; the list column is narrower. Reply box is now 722 px at 1440 (was 342) | `Inbox.tsx` | dry-run `qa: the reply box gets most of the panel` |
+| ISSUE-004 | Canned replies no longer invent facts (Route 8, Alder Street removed). The note says it is a generic template that doesn't read the message | `api.ts` | dry-run `qa: the mock reply makes no made-up specifics` |
+| ISSUE-005 | "Assign to me" button. "Review & resolve" on an unassigned conversation claims it for you, if you are allowed to own it | `Inbox.tsx` | dry-run `qa: ... Assign to me`, `qa: resolving ... claims it` |
+| ISSUE-006 | **Decision (Director said fix everything; default taken):** "Approve all N linked channels" in the post dialog. Each copy is still checked on its own (channel access, not your own post); skipped copies are named | `api-content.ts`, `PostDetailDialog.tsx` | unit `approve all linked`; dry-run `qa: both linked posts are approved` |
+| ISSUE-007 | Seed posts pick the closest sample photo by topic (buses for Transit, pool for Recreation, woodland for leaf and park posts, city skyline otherwise) | `seed.ts` | visual |
+| ISSUE-008 | **Decision (default taken):** new function `content.view` ("View content"), given to the Viewer role and Administrator. Viewers read posts and the calendar on assigned channels with no actions. Demo data version 6, so the demo resets once | `types.ts`, `roles.ts`, `nav.ts`, `api.ts`, `api-content.ts`, `db.ts`, `seed.ts` | unit `a viewer can read posts`; dry-run `roles: a viewer ...` (3 checks) |
+| ISSUE-009 | Unknown address shows "Page not found" with a link to the SOC | `router.tsx` | dry-run `qa: an unknown address shows Page not found` |
+| ISSUE-010 | Phone inbox: search plus one "Filters" button; the first conversation is on the first screen. The header drops the municipality line on phones so the page name has room | `Inbox.tsx`, `Shell.tsx` | dry-run `qa: on a phone ...` (2 checks) |
+| ISSUE-011 | Placeholders read "For example: ..." | `Composer.tsx` | dry-run (selectors updated) |
+| ISSUE-012 | "Apply" is disabled until a channel is ticked | `Composer.tsx` | dry-run `qa: Apply is disabled` |
+| ISSUE-013 | The sample photo is labelled "Placeholder, choose your own" until approved media is chosen | `Composer.tsx` | dry-run `qa: the sample photo is labelled` |
+| ISSUE-014 | "View as" is grouped by role and shows each person's department | `Shell.tsx` | dry-run `qa: View as is grouped by role` |
+
+Also found while fixing: with two Facebook pages selected, both preview tabs read "Facebook". They now show the page name when networks repeat.
+
+Not re-scored. Run `/qa-only --regression docs/qa/2026-10-27-ux-persona-qa/baseline.json` for a measured before and after.
 
 ## Deferred Tests (proposals, not written)
 

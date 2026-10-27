@@ -36,7 +36,7 @@ export interface SessionInfo {
   seededAt: string
 }
 
-const ALL_FUNCTIONS: FunctionId[] = ['content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete']
+const ALL_FUNCTIONS: FunctionId[] = ['content.view', 'content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete']
 
 export function getSession(actorId: string): Promise<SessionInfo> {
   const s = db()
@@ -412,7 +412,7 @@ export function saveReplyDraft(actorId: string, id: string, text: string) {
 
 const SUGGESTIONS: Record<Category, string> = {
   Roads: 'Thank you for reporting this. We have shared the location with our Roads team, and a crew will assess it. You can track road work on the municipal service map.',
-  Transit: 'Thanks for letting us know, and sorry for the trouble. The accessible stop for the Route 8 detour is at the temporary Alder Street shelter. We have passed your feedback to Transit operations.',
+  Transit: 'Thanks for letting us know, and sorry for the trouble. We have passed your feedback to Transit operations, and a team member will follow up.',
   Recreation: 'Thanks for reaching out. Fee assistance is available for most recreation programs. Our Recreation team can help you apply.',
   Permits: 'Thanks for your patience. A permit coordinator will review your file and contact you with an update.',
   Waste: 'Sorry about the missed collection. We have flagged your address for follow-up. You can also submit a request through 311.',
@@ -426,7 +426,7 @@ export function suggestReply(actorId: string, id: string): Promise<{ text: strin
   return wait({
     text: SUGGESTIONS[x.category],
     confidence: Math.round(x.ai.confidence * 100),
-    basis: `Mock template for category "${x.category}". Not a live model and not verified advice.`,
+    basis: `Generic "${x.category}" template. It does not read this message, so check it answers what the resident asked. Not a live model and not verified advice.`,
   })
 }
 

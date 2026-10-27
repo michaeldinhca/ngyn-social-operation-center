@@ -298,6 +298,8 @@ export function createSeed(now = Date.now()): DemoState {
     ...Array<PostStatus>(6).fill('In review'),
     ...Array<PostStatus>(2).fill('Approved'),
   ]
+  // The sample set has 5 photos: 0 woodland, 1 buses, 2 boardwalk, 3 city skyline, 4 pool. Pick the closest to the post.
+  const photoFor = (dept: string, title: string) => (/leaf|leaves|park|trail|tree|garden/i.test(title) ? 0 : dept === 'Transit' ? 1 : dept === 'Recreation' ? 4 : 3)
   const posts: Post[] = statusPlan.map((status, i) => {
     const [department, title, text] = POST_TEMPLATES[i % POST_TEMPLATES.length]
     const candidates = accounts.filter((a) => a.department === department)
@@ -331,8 +333,8 @@ export function createSeed(now = Date.now()): DemoState {
       comment: i % 6 === 0 ? 'More details and the full schedule are on the municipal website.' : '',
       format: net === 'Instagram' ? (i % 2 ? 'Reel' : 'Feed') : net === 'YouTube' ? 'Short' : net === 'X' ? 'Thread' : 'Feed',
       status,
-      photo: i % 5,
-      mediaId: `media-${i % 5}`,
+      photo: photoFor(department, title),
+      mediaId: `media-${photoFor(department, title)}`,
       assetGroupId: account.assetGroupId,
       guidelineId: account.assetGroupId ? `set-${account.assetGroupId.replace('asset-', '')}-0` : null,
       history,
@@ -504,7 +506,7 @@ export function createSeed(now = Date.now()): DemoState {
   ]
 
   return {
-    version: 5,
+    version: 6,
     seededAt: iso(now),
     users,
     accounts,

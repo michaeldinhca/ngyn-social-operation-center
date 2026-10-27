@@ -1,5 +1,5 @@
-import { createHashHistory, createRootRoute, createRoute, createRouter, Navigate } from '@tanstack/react-router'
-import { Lock } from 'lucide-react'
+import { createHashHistory, createRootRoute, createRoute, createRouter, Link, Navigate } from '@tanstack/react-router'
+import { Lock, SearchX } from 'lucide-react'
 import { Shell } from '@/components/shell/Shell'
 import { navItem } from '@/components/shell/nav'
 import { EmptyState, PageHeader, Skeleton } from '@/components/ui/primitives'
@@ -54,7 +54,16 @@ function PageSwitch() {
     return session.data.functions['content.create'] ? <ComposerPage /> : <EmptyState title="Your demo user does not have this function" icon={<Lock />}>Creating posts needs the content creation function.</EmptyState>
   }
   const item = navItem(page)
-  if (!item) return <Navigate to="/$page" params={{ page: 'soc' }} />
+  if (!item) {
+    return (
+      <>
+        <PageHeader title="Page not found" />
+        <EmptyState title="That page doesn't exist" icon={<SearchX />}>
+          The address may be mistyped or from an older link. <Link to="/$page" params={{ page: 'soc' }} className="font-medium text-accent-strong underline">Go to the Social Operation Center</Link>.
+        </EmptyState>
+      </>
+    )
+  }
   if (!session.data) return <Skeleton className="h-96" />
   if (!item.allowed(session.data)) {
     return (

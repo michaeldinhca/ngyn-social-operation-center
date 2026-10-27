@@ -7,8 +7,8 @@ describe('roles and functions', () => {
     for (const fns of Object.values(ROLE_FUNCTIONS)) fns.forEach((f) => expect(ids.has(f)).toBe(true))
   })
 
-  it('a viewer starts with no functions, an administrator with all', () => {
-    expect(ROLE_FUNCTIONS.Viewer).toEqual([])
+  it('a viewer can only read content, an administrator has all', () => {
+    expect(ROLE_FUNCTIONS.Viewer).toEqual(['content.view'])
     expect(ROLE_FUNCTIONS.Administrator.length).toBe(FUNCTION_CATALOG.length)
   })
 

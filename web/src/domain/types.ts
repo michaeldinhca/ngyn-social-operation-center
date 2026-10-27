@@ -9,6 +9,7 @@ export type Department = 'Communications' | 'Public Works' | 'Transit' | 'Recrea
 export type StaffRole = 'Administrator' | 'Approver' | 'Editor' | 'Responder' | 'Analyst' | 'Viewer'
 
 export type FunctionId =
+  | 'content.view'
   | 'content.create'
   | 'content.approve'
   | 'content.publish'
@@ -391,7 +392,7 @@ export interface MediaAsset {
 }
 
 export interface DemoState {
-  version: 5
+  version: 6
   seededAt: string
   users: User[]
   accounts: SocialAccount[]

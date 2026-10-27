@@ -4,12 +4,12 @@ export const STAFF_ROLES: StaffRole[] = ['Administrator', 'Approver', 'Editor', 
 
 /** The usual functions for a staff role. A starting point only: functions and account assignments stay separate. */
 export const ROLE_FUNCTIONS: Record<StaffRole, FunctionId[]> = {
-  Administrator: ['admin.full', 'content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete'],
+  Administrator: ['admin.full', 'content.view', 'content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete'],
   Approver: ['content.create', 'content.approve', 'content.publish', 'reports.view'],
   Editor: ['content.create'],
   Responder: ['inbox.respond'],
   Analyst: ['reports.view'],
-  Viewer: [],
+  Viewer: ['content.view'],
 }
 
 export type FunctionArea = 'Content' | 'Engagement' | 'Insights' | 'Advertising' | 'Administration'
@@ -24,6 +24,7 @@ export interface FunctionInfo {
 }
 
 export const FUNCTION_CATALOG: FunctionInfo[] = [
+  { id: 'content.view', label: 'View content', description: 'Read posts and the publishing calendar on assigned channels. Cannot change anything.', area: 'Content', scoped: 'channels' },
   { id: 'content.create', label: 'Create content', description: 'Draft posts and submit them for approval.', area: 'Content', scoped: 'channels' },
   { id: 'content.approve', label: 'Approve content', description: 'Approve or return posts in review.', area: 'Content', scoped: 'channels' },
   { id: 'content.publish', label: 'Schedule and publish', description: 'Schedule approved posts, reschedule and retry.', area: 'Content', scoped: 'channels' },

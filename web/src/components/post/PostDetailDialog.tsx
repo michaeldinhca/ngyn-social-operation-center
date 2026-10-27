@@ -35,6 +35,7 @@ export function PostDetailDialog({ id, onClose }: { id: string | null; onClose: 
   const [mode, setMode] = useState<'none' | 'return' | 'schedule'>('none')
   const transition = useAction(content.transitionPost)
   const del = useAction(content.deletePost, { success: 'Draft deleted.' })
+  const approveAll = useAction(content.approveLinked)
   const d = q.data
   const p = d?.post
 
@@ -92,6 +93,21 @@ export function PostDetailDialog({ id, onClose }: { id: string | null; onClose: 
             {can('approve') && (
               <Button variant="primary" disabled={transition.isPending} onClick={() => run('approve', {}, 'Approved. It can now be scheduled.')}>
                 <Check /> Approve
+              </Button>
+            )}
+            {can('approve') && (d?.siblings.filter((x) => x.canApprove).length ?? 0) > 0 && (
+              <Button
+                disabled={approveAll.isPending}
+                onClick={() =>
+                  approveAll.mutate([p.id], {
+                    onSuccess: (r) => {
+                      toast.success(`Approved ${r.approved} channels. Each can now be scheduled on its own.`)
+                      if (r.skipped.length) toast.info(`Not approved here (another approver or your own post): ${r.skipped.join(', ')}.`)
+                    },
+                  })
+                }
+              >
+                <Check /> Approve all {1 + d!.siblings.filter((x) => x.canApprove).length} linked channels
               </Button>
             )}
             {can('return') && mode !== 'return' && (
@@ -176,7 +192,7 @@ export function PostDetailDialog({ id, onClose }: { id: string | null; onClose: 
                     </li>
                   ))}
                 </ul>
-                <p className="mt-1 text-xs text-muted">Each channel is approved and scheduled on its own.</p>
+                <p className="mt-1 text-xs text-muted">Each channel is approved and scheduled on its own, or approve them together.</p>
               </div>
             )}
 

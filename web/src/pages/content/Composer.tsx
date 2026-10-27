@@ -67,7 +67,8 @@ export function ComposerPage() {
   const [mediaPicker, setMediaPicker] = useState(false)
   const [topic, setTopic] = useState('')
   const [basis, setBasis] = useState<string[] | null>(null)
-    const [locked, setLocked] = useState<string[]>([])
+  const [locked, setLocked] = useState<string[]>([])
+  const [tried, setTried] = useState(false)
   const editing = !!search.batch
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -175,7 +176,25 @@ export function ComposerPage() {
     set({ channelIds: ids, assetGroupId, guidelineId: assetGroupId === draft.assetGroupId ? draft.guidelineId : null })
   }
 
+  // What is still missing before this can go to an approver. Mirrors the API's rules so the editor sees it at the fields.
+  const needs: { key: string; text: string }[] = []
+  if (!draft.title.trim()) needs.push({ key: 'title', text: 'Add an internal title.' })
+  for (const n of networks) {
+    const len = variantFor(n).text.trim().length
+    if (!len) needs.push({ key: `text-${n}`, text: `Write the ${n} caption.` })
+    else if (len > NETWORK_LIMITS[n]) needs.push({ key: `limit-${n}`, text: `Shorten the ${n} caption to ${NETWORK_LIMITS[n]} characters or fewer.` })
+  }
+  if (!draft.alt.trim()) needs.push({ key: 'alt', text: 'Add ALT text for the image.' })
+  const missing = (key: string) => needs.some((n) => n.key === key)
+  const showNeeds = tried && needs.length > 0
+
   const submit = (doSubmit: boolean) => {
+    if (doSubmit && needs.length) {
+      setTried(true)
+      // The list renders on the next paint, so scroll after it exists.
+      setTimeout(() => document.getElementById('submit-needs')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50)
+      return
+    }
     const variants: content.ComposerInput['variants'] = {}
     for (const c of selected) variants[c.id] = variantFor(c.network)
     save.mutate(
@@ -257,7 +276,7 @@ export function ComposerPage() {
             <CardHeader title="Content" description="Write once, or customize each network." />
             <div className="grid gap-4">
               <Field label="Internal title" hint="Only staff see this.">
-                {(id) => <Input id={id} value={draft.title} maxLength={120} onChange={(e) => set({ title: e.target.value })} placeholder="Winter parking ban reminder" />}
+                {(id) => <Input id={id} value={draft.title} maxLength={120} aria-invalid={tried && missing('title') ? true : undefined} className={tried && missing('title') ? 'border-bad' : undefined} onChange={(e) => set({ title: e.target.value })} placeholder="For example: Winter parking ban reminder" />}
               </Field>
 
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border px-3.5 py-2.5">
@@ -292,7 +311,7 @@ export function ComposerPage() {
               )}
 
               <Field label={activeNetwork ? `${activeNetwork} caption` : draft.customize ? 'Shared starting text' : 'Caption'}>
-                {(id) => <Textarea id={id} rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder="Write the post. Plain language, with a clear next step." />}
+                {(id) => <Textarea id={id} rows={6} value={text} aria-invalid={tried && networks.some((n) => missing(`text-${n}`)) ? true : undefined} className={tried && networks.some((n) => missing(`text-${n}`)) ? 'border-bad' : undefined} onChange={(e) => setText(e.target.value)} placeholder="Write the post. Plain language, with a clear next step." />}
               </Field>
               <div className="-mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
                 <span id="char-count" className={cn('tabular', limit !== null && text.length > limit && 'font-semibold text-bad')}>
@@ -368,7 +387,9 @@ export function ComposerPage() {
                       <span className="font-medium">{draft.media.name}</span> <Badge tone="good">Approved media</Badge>
                     </>
                   ) : (
-                    <>Sample photo {draft.photo + 1}</>
+                    <>
+                      Sample photo {draft.photo + 1} <Badge tone="warn">Placeholder, choose your own</Badge>
+                    </>
                   )}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -386,7 +407,7 @@ export function ComposerPage() {
               </div>
             </div>
             <Field label="ALT text (required)" className="mt-4" hint="Describe the image for people who can't see it.">
-              {(id) => <Textarea id={id} rows={2} value={draft.alt} onChange={(e) => set({ alt: e.target.value })} placeholder="A snow plow clearing a residential street at dawn." />}
+              {(id) => <Textarea id={id} rows={2} value={draft.alt} aria-invalid={tried && missing('alt') ? true : undefined} className={tried && missing('alt') ? 'border-bad' : undefined} onChange={(e) => set({ alt: e.target.value })} placeholder="For example: A snow plow clearing a residential street at dawn." />}
             </Field>
           </Card>
 
@@ -421,8 +442,20 @@ export function ComposerPage() {
             </div>
           </Card>
 
-          <div className="sticky bottom-0 z-10 flex items-center gap-2 rounded-xl border border-border bg-surface/95 px-3 py-2.5 backdrop-blur sm:gap-3 sm:px-4 sm:py-3">
-            <p className="mr-auto hidden text-[0.8125rem] text-muted sm:block">{editing ? 'Saving updates the draft posts only.' : 'Draft kept in this browser. Nothing is sent.'}</p>
+          {showNeeds && (
+            <div id="submit-needs" role="alert" className="rounded-lg border border-bad bg-bad-soft px-4 py-3 text-sm text-bad">
+              <p className="font-semibold">Before you can submit for approval:</p>
+              <ul className="mt-1 list-disc pl-5">
+                {needs.map((n) => (
+                  <li key={n.key}>{n.text}</li>
+                ))}
+              </ul>
+              <p className="mt-1 text-xs">Applies to {selected.map((c) => c.name).join(', ')}. You can still save a draft.</p>
+            </div>
+          )}
+
+          <div className="sticky bottom-0 z-10 flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2.5 shadow-[0_-8px_16px_-8px_rgba(0,0,0,0.4)] sm:gap-3 sm:px-4 sm:py-3">
+            <p className="mr-auto hidden whitespace-nowrap text-[0.8125rem] text-muted lg:block">{editing ? 'Saving updates the draft posts only.' : 'Draft kept in this browser. Nothing is sent.'}</p>
             {!editing && (
               <Button
                 variant="ghost"
@@ -442,7 +475,7 @@ export function ComposerPage() {
             <Button className="ml-auto sm:ml-0" onClick={() => submit(false)} disabled={save.isPending || !selected.length}>
               <Save /> Save draft
             </Button>
-            <Button variant="primary" onClick={() => submit(true)} disabled={save.isPending || !selected.length}>
+            <Button variant="primary" onClick={() => submit(true)} disabled={save.isPending || !selected.length} title={!selected.length ? 'Choose at least one channel first' : undefined}>
               <Send /> Submit for approval
             </Button>
           </div>
@@ -460,7 +493,7 @@ export function ComposerPage() {
                   {selected.map((c) => (
                     <button key={c.id} role="tab" aria-selected={c.id === previewChannel.id} onClick={() => setPreview(c.id)} className={cn('flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs', c.id === previewChannel.id ? 'border-accent-strong bg-accent-soft' : 'border-border text-muted hover:text-text')}>
                       <ChannelAvatar account={c} size={20} />
-                      {c.network}
+                      <span className="max-w-32 truncate">{networks.length === selected.length ? c.network : c.name}</span>
                     </button>
                   ))}
                 </div>
@@ -507,6 +540,7 @@ function ChannelChooser({ open, onOpenChange, channels, value, onApply }: { open
           <Button onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
             variant="primary"
+            disabled={!chosen.length}
             onClick={() => {
               onApply(channels.filter((c) => chosen.includes(c.id)).map((c) => c.id))
               onOpenChange(false)

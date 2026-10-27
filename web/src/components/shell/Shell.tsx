@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Select } from '@/components/ui/primitives'
 import { Tooltip } from '@/components/ui/tooltip'
+import { STAFF_ROLES } from '@/domain/roles'
 import { ADMIN_ID } from '@/domain/types'
 import { cn, formatDateTime } from '@/lib/utils'
 import * as api from '@/mock/api'
@@ -172,19 +173,26 @@ export function Shell() {
             <Menu className="size-5" />
           </Button>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs text-muted">Municipality of Harbourview · Fictional</p>
+            <p className="hidden truncate text-xs text-muted sm:block">Municipality of Harbourview · Fictional</p>
             <p className="truncate text-[0.9375rem] font-semibold">{pageTitle}</p>
           </div>
           <label className="flex items-center gap-2 text-sm text-muted">
             <span className="hidden sm:inline">View as</span>
-            <Select aria-label="View as user" value={actorId} onChange={(e) => setActorId(e.target.value)} className="h-9 w-[min(15rem,46vw)]">
+            <Select aria-label="View as user" value={actorId} onChange={(e) => setActorId(e.target.value)} className="h-9 w-[min(16rem,42vw)]">
               <option value={ADMIN_ID}>Demo administrator</option>
-              {users.data?.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} · {u.role}
-                  {u.status !== 'Active' ? ` (${u.status})` : ''}
-                </option>
-              ))}
+              {STAFF_ROLES.map((role) => {
+                const people = users.data?.filter((u) => u.role === role) ?? []
+                return people.length ? (
+                  <optgroup key={role} label={`${role}s`}>
+                    {people.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} · {u.department}
+                        {u.status !== 'Active' ? ` (${u.status})` : ''}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null
+              })}
             </Select>
           </label>
           <Tooltip content={prefs.theme === 'dark' ? 'Light theme' : 'Dark theme'} side="bottom">

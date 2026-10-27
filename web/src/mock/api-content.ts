@@ -33,7 +33,7 @@ export interface PostRow extends Post {
 function requireContentAccess(s: ReturnType<typeof db>, actorId: string) {
   const a = actorOf(s, actorId)
   const c = ctx(s)
-  const ok = a.isAdmin || (['content.create', 'content.approve', 'content.publish', 'reports.view'] as const).some((f) => hasFunction(a, f, c))
+  const ok = a.isAdmin || (['content.view', 'content.create', 'content.approve', 'content.publish', 'reports.view'] as const).some((f) => hasFunction(a, f, c))
   if (!ok) throw new ApiError('Content needs a content or reports permission.')
   return a
 }
@@ -89,7 +89,7 @@ export function listPosts(actorId: string, f: PostFilters): Promise<{ rows: Post
 
 export interface PostDetail {
   post: PostRow
-  siblings: { id: string; accountName: string; network: Network; status: PostStatus }[]
+  siblings: { id: string; accountName: string; network: Network; status: PostStatus; canApprove: boolean }[]
   paused: boolean
   guideline: { name: string; reviewed: boolean } | null
 }
@@ -111,7 +111,7 @@ export function getPost(actorId: string, id: string): Promise<PostDetail> {
     post: toRow(s, actorId, p),
     siblings: s.posts
       .filter((x) => x.batchId === p.batchId && x.id !== p.id && canViewAccount(a, x.accountId, ctx(s)))
-      .map((x) => ({ id: x.id, accountName: s.accounts.find((c) => c.id === x.accountId)!.name, network: s.accounts.find((c) => c.id === x.accountId)!.network, status: x.status })),
+      .map((x) => ({ id: x.id, accountName: s.accounts.find((c) => c.id === x.accountId)!.name, network: s.accounts.find((c) => c.id === x.accountId)!.network, status: x.status, canApprove: x.status === 'In review' && toRow(s, actorId, x).actions.includes('approve') })),
     paused: s.emergency.paused,
     guideline: set ? { name: set.name, reviewed: !!set.reviewed } : null,
   })
@@ -174,6 +174,18 @@ export function savePost(actorId: string, id: string, patch: PostPatch) {
   audit(s, actorId, 'Post edited', `${p.id} ${p.title}`)
   persist()
   return wait(true)
+}
+
+/** Approve this post and every linked channel copy in review that the actor may approve. Each channel is still checked on its own. */
+export async function approveLinked(actorId: string, id: string): Promise<{ approved: number; skipped: string[] }> {
+  const s = db()
+  const p = loadPost(s, actorId, id)
+  const batch = s.posts.filter((x) => x.batchId === p.batchId && x.status === 'In review' && canViewAccount(actorOf(s, actorId), x.accountId, ctx(s)))
+  const ok = batch.filter((x) => toRow(s, actorId, x).actions.includes('approve'))
+  if (!ok.some((x) => x.id === p.id)) throw new ApiError('You can’t approve this post.')
+  for (const x of ok) await transitionPost(actorId, x.id, 'approve')
+  const skipped = batch.filter((x) => !ok.includes(x)).map((x) => s.accounts.find((c) => c.id === x.accountId)!.name)
+  return { approved: ok.length, skipped }
 }
 
 export interface TransitionOpts {
@@ -318,6 +330,7 @@ export function saveComposer(actorId: string, input: ComposerInput): Promise<Com
 
   // Validate before changing anything, so a rejected save leaves no partial batch.
   const drafts: Post[] = []
+  const notReady: string[] = []
   for (const ch of channels) {
     const v = input.variants[ch.id]
     if (!v) throw new ApiError(`Missing content for ${ch.network}.`)
@@ -348,10 +361,11 @@ export function saveComposer(actorId: string, input: ComposerInput): Promise<Com
     }
     if (input.submit) {
       const problems = submitProblems(s, post)
-      if (problems.length) throw new ApiError(`Not ready for approval (${ch.network}): ${problems.join(' ')}`)
+      if (problems.length) notReady.push(`${ch.name} (${ch.network}): ${problems.join(' ')}`)
     }
     drafts.push(post)
   }
+  if (notReady.length) throw new ApiError(`Not ready for approval. ${notReady.join(' ')}`)
 
   let created = 0
   let updated = 0
