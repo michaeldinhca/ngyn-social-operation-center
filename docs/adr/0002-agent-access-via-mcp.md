@@ -27,6 +27,7 @@ So the product is not a second ad manager or a second analytics tool. It is a **
 ## Risks and open questions
 
 - **Privacy and residency.** Sending resident text to an external AI service is a data flow under the Canada-only privacy concern (see ADR 0001). Decide whether inbox and listening content is exposed to agents at all, and review the provider's data handling first.
+  - **Director decision (2026-10-27): the municipality must approve it.** Resident comments, messages and mentions are not visible to agents by default. Each municipality instance has an "allow agents to read resident content" setting that is off by default, can only be turned on by an administrator recording the municipality's written approval (who approved, when, which provider), and is audited. While it is off, agent tools return counts and sentiment only, never resident text.
 - **Which ChatGPT surface:** a custom connector over MCP, or a custom GPT with actions? This sets how authentication works.
 - **Authentication:** per-person OAuth against our identity provider, token lifetime and revocation, and one instance (tenant) per municipality.
 - **Tool list:** start read-only (channels, posts, conversations, analytics), then drafts (post, campaign, reply draft, note), reviewed one tool at a time.

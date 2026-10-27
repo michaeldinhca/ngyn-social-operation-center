@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-27",
+  "url": "http://localhost:5173",
+  "healthScore": 89,
+  "issues": [
+    {"id": "ISSUE-001", "title": "Composer errors appear only in a toast that disappears", "severity": "medium", "category": "ux"},
+    {"id": "ISSUE-002", "title": "Composer sticky action bar covers the form", "severity": "medium", "category": "visual"},
+    {"id": "ISSUE-003", "title": "Inbox conversation and reply column too narrow", "severity": "medium", "category": "visual"},
+    {"id": "ISSUE-004", "title": "Mock AI reply answers a different complaint", "severity": "medium", "category": "content"},
+    {"id": "ISSUE-005", "title": "Resolving a reply needs a separate owner save first", "severity": "medium", "category": "ux"},
+    {"id": "ISSUE-006", "title": "Linked posts approved one channel at a time", "severity": "low", "category": "ux"},
+    {"id": "ISSUE-007", "title": "Stock photos don't match post captions", "severity": "low", "category": "content"},
+    {"id": "ISSUE-008", "title": "Viewer role can see only the SOC", "severity": "medium", "category": "ux"},
+    {"id": "ISSUE-009", "title": "Unknown address quietly shows the SOC", "severity": "low", "category": "ux"},
+    {"id": "ISSUE-010", "title": "Phone inbox filters push messages below the first screen", "severity": "low", "category": "ux"},
+    {"id": "ISSUE-011", "title": "Internal title placeholder looks like a real value", "severity": "low", "category": "ux"},
+    {"id": "ISSUE-012", "title": "Apply 0 channels can be clicked", "severity": "low", "category": "ux"},
+    {"id": "ISSUE-013", "title": "Composer attaches a photo the editor never chose", "severity": "medium", "category": "ux"},
+    {"id": "ISSUE-014", "title": "View as switcher is a 30-name list with no search", "severity": "low", "category": "ux"}
+  ],
+  "categoryScores": {"console": 100, "links": 100, "visual": 84, "functional": 100, "ux": 50, "content": 89, "accessibility": 100, "performance": null}
+}
