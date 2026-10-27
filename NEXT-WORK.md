@@ -9,6 +9,7 @@ Parallel work limit: 1
 - 2026-10-21: "Continue build for all other pages, I will comment later." Sections 3 to 5 are being built without a stop between them.
 - 2026-10-21: "Pause for now, log the progress." Work paused; see `docs/work-items/MOCKUP-V1-REMAINING/PROGRESS.md`.
 - 2026-10-26 (answers to the section 3 to 5 questions): (1) the ads layer is a thin governance layer, not a copy of Meta or Google Ads Manager, and the product is meant to be driven by the customer's ChatGPT; ad account model still open. (2) Yes: nobody approves what they wrote (applied to posts and campaigns). (3) Add a custom date range to analytics (done). (4) No chart images in the PDF; ChatGPT works through our MCP. (5) Administrator access becomes its own function (done). Design recorded in `docs/adr/0002-agent-access-via-mcp.md`.
+- 2026-10-27: Bluesky connector approved ("do it"). Built in `connectors/bluesky` (ADR 0003): local only, test account only, no deployment. The Director will share Meta app details separately.
 - 2026-10-27: "Fix everything" from the QA report. Two product calls were taken as defaults and can be reversed: (1) an approver can approve all linked channel copies at once, each still checked on its own; (2) a new "View content" function lets Viewers read posts and the calendar on assigned channels.
 - 2026-10-27: Resident comments and messages reach ChatGPT only if the municipality approves it (recorded in ADR 0002: off by default, admin records the written approval, audited). Ran a gstack `/qa-only` persona test of the mockup: health 89/100, 14 UX issues (7 medium, 7 low), 0 console errors. Report: `docs/qa/2026-10-27-ux-persona-qa/QA-REPORT.md`.
 - 2026-10-24: "At 2 pm, do anything that left." Sections 3 to 5 were finished and tested at 2 pm. All 13 screens are now rebuilt.
@@ -22,6 +23,7 @@ Parallel work limit: 1
 | Work-item ID | Work | State | Owner |
 | --- | --- | --- | --- |
 | `QA-UX-FIX-001` | Fix all 14 QA issues. Report: `docs/qa/2026-10-27-ux-persona-qa/QA-REPORT.md` (Fixes Applied) | `BUILT_AWAITING_REVIEW` | Claude |
+| `BLUESKY-CONNECTOR` | `connectors/bluesky`: publish, reply, inbox, metrics, delete, with approval, pause and audit rules. 13/13 unit; live public read verified | `BUILT_AWAITING_REVIEW`; live account test needs the Director's test account in `.env` | Claude |
 | `MOCKUP-V1-REBUILD` § 3 to § 5 | Advertising, Analytics & Reports, Settings. Report: `docs/work-items/MOCKUP-V1-REMAINING/BUILD-REPORT.md` | `BUILT_AWAITING_REVIEW` | Claude |
 
 ## Rebuild sections (review one at a time)
@@ -49,6 +51,8 @@ Parallel work limit: 1
 | Work-item ID | Work | State | Depends on |
 | --- | --- | --- | --- |
 | `MCP-AGENT-SURFACE` | Design the MCP tool list from the mock API (read-only first, then drafts), agent scope, delegation and audit. See ADR 0002 | `QUEUED` | `STACK-DECISION-001` and Director approval of ADR 0002 |
+| `BLUESKY-WIRE-UP` | Point the mockup's Bluesky channels at the local connector when it is running (inbox, composer publish after approval, metrics), with mock data as the fallback | `QUEUED` | `BLUESKY-CONNECTOR` live test passes |
+| `META-CONNECTOR` | Facebook Pages and Instagram through the Director's own Meta app, instead of Zernio | `QUEUED` | Meta app details from the Director (see the list in chat, 2026-10-27) |
 | `ZERNIO-SPIKE` | Free-tier account, 2 test accounts (not municipal), verify publish/comments/DMs/analytics/webhooks, fill the capability matrix | `QUEUED` | Director approval for vendor signup and test connections |
 
 ## Latest handoff

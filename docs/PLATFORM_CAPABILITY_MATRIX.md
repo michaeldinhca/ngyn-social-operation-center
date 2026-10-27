@@ -23,6 +23,26 @@ Last updated: 2026-10-21. Source: https://docs.zernio.com/platforms/compare
 | Public keyword listening (non-owned) | ? | ? | ? | ? | ? | ? |
 | Data processing region (via Zernio) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) | UK/EU/US, not Canada (Z-doc) |
 
+## Bluesky through our own connector (`connectors/bluesky`, ADR 0003)
+
+Built 2026-10-27, no vendor in between. Legend for this table: **U-test** covered by unit tests with a fake client, **Live-public** checked against Bluesky's public API without logging in, **Pending** needs the test account.
+
+| Capability | Status |
+| --- | --- |
+| Log in with an app password | U-test; live Pending |
+| Account profile and counts | U-test; Live-public (profile read worked 2026-10-27) |
+| Publish text with links, @mentions and #tags | U-test; facet detection Live-public; posting Pending |
+| Publish one image with ALT text (PNG, JPEG, WebP, GIF, about 2 MB) | U-test; Pending |
+| 300 grapheme limit | U-test (enforced before calling Bluesky) |
+| Read mentions, replies and quotes on the account | U-test; Pending |
+| Reply in a thread (root and parent set) | U-test; Pending |
+| Delete our own post | U-test; Pending |
+| Post metrics: likes, reposts, replies, quotes | U-test; Pending |
+| Impressions and reach | U: Bluesky doesn't report them. The connector returns null (shown as Unavailable) |
+| DMs | Not built. Bluesky chat uses a separate service and needs an app password with DM access |
+| Video, multiple images, threads of our own | Not built |
+| Push (webhooks) | None. Bluesky has no webhooks; the inbox is polled |
+
 ## Still to verify (per platform)
 
 - App review or approval needed (Zernio's app vs our own app), and how posts are attributed.

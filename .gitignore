@@ -1,3 +1,7 @@
 node_modules/
 .dry-run/
 web/dist/
+
+# Connector secrets and local state
+.env
+connectors/*/.data/

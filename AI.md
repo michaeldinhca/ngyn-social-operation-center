@@ -55,6 +55,12 @@ These come from the handoff and the Product Director. Don't change them without 
 - Every change runs `npm run typecheck`, `npm test` and `npm run build && npm run dry-run` in `web/`. Add a dry-run step for each new interaction.
 - The rebuild is reviewed one menu section at a time (see `NEXT-WORK.md`). Don't start the next section before the current one is reviewed.
 
+## Engineering rules for connectors (`connectors/`)
+
+- Connectors are the only code that calls a real social network. Phase 1 exception, recorded in ADR 0003: the Bluesky connector, on a developer machine, with a **test account only**.
+- Credentials live in a git-ignored `.env`, never in the browser, the repo, chat or logs.
+- Each connector enforces the product rules itself (named approver, emergency pause, ALT text, audit). Unit tests use a fake client and no network; live checks are opt-in scripts.
+
 ## Engineering rules for prototype v0
 
 - `source/dist/` is the editable source. `NGYN_Municipal_Social_Platform.html` at the root is a **build output**; regenerate it with `npm run build`, never hand-edit it.
@@ -85,6 +91,7 @@ For each work item, create `docs/work-items/<ID>/BUILD-REPORT.md` with: scope im
 | `docs/PLATFORM_CAPABILITY_MATRIX.md` | Evidence-backed per-platform capability status |
 | `docs/dry-runs/` | Dated browser dry-run reports |
 | `docs/handoff/` | Original Codex handoff and build brief (reference, read-only) |
+| `connectors/` | Real network connectors, run locally (Bluesky first, ADR 0003); see each README |
 | `web/` | **Mockup v1** (React + Vite). All new UI work goes here; see `web/README.md` |
 | `docs/work-items/` | Build reports per work item and review section |
 | `source/dist/` | Prototype v0 source (HTML/CSS/JS), kept as reference |
