@@ -51,7 +51,7 @@ Status as of 2026-10-21 (dry-run `docs/dry-runs/2026-10-21.md`).
 | E10 | Knowledge-assisted drafting | Not started |
 | E11 | Audit-grade workflow | Partial (browser-local log) |
 | E12 to E16 | Heatmap, workflow analytics, emergency templates, multilingual, 311/CRM | Not started (P2) |
-| E17 | Agent access via MCP: the customer's ChatGPT connects to our MCP server and works for a named person, with their permissions, human approval, no spend and a full audit trail | Not started. Direction decided 2026-10-26; design proposed in `docs/adr/0002-agent-access-via-mcp.md`. The mock API functions are the draft tool contract. |
+| E17 | Agent access via MCP: the customer's ChatGPT connects to our MCP server and works for a named person, with their permissions, human approval, no spend and a full audit trail | Built locally 2026-10-27 in `mcp/` (ADR 0005): per-person OAuth, per-person grant (off by default), 9 read and 4 draft tools on the mock API, resident content gate, audit as "ChatGPT for <person>". Not reachable by ChatGPT until a public URL is approved. Admin controls are a command, not screens yet. |
 
 ## 3. Accepted domain rules (must hold in every build)
 

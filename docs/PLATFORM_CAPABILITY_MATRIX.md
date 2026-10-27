@@ -43,6 +43,42 @@ Built 2026-10-27, no vendor in between. Legend for this table: **U-test** covere
 | Video, multiple images, threads of our own | Not built |
 | Push (webhooks) | None. Bluesky has no webhooks; the inbox is polled |
 
+## LinkedIn through our own connector (`connectors/linkedin`, ADR 0004)
+
+Built 2026-10-27 against the REST API, version 202610. **U-test** means covered by unit tests with a fake client; **Pending** needs the Director's LinkedIn app and a test member or page.
+
+| Capability | Status |
+| --- | --- |
+| Sign in (OAuth, token written to `.env`) | Pending |
+| Post text as a member (`w_member_social`) or a company page (`w_organization_social`, Community Management API approval) | U-test; Pending |
+| Image with ALT text (PNG, JPEG, GIF) through the Images API | U-test; Pending |
+| 3000 character limit; text escaped for LinkedIn's "little" format, hashtags kept | U-test |
+| Reply to a comment, threaded | U-test; Pending |
+| Comments on our posts (inbox) | U-test; Pending. Company pages only: reading a member's own posts needs restricted `r_member_social` |
+| Reactions and comments per post | U-test; Pending |
+| Impressions, reach, clicks, shares | Company pages only (share statistics). Member posts: null |
+| Delete our own post | U-test; Pending |
+| Page messages, webhooks | None through the API here; the inbox is polled |
+
+## Facebook Page and Instagram through our own connector (`connectors/meta`, ADR 0004)
+
+Built 2026-10-27 against Graph API v26.0, every call signed with `appsecret_proof`. Same legend.
+
+| Capability | Facebook | Instagram |
+| --- | --- | --- |
+| Sign in (Facebook Login, Page token written to `.env`) | Pending | Linked account found at sign-in; Pending |
+| Publish text | U-test; Pending | Not possible: Instagram posts need an image |
+| Publish one image with ALT text | U-test (`alt_text_custom`); Pending | U-test (`alt_text`, public JPEG URL required); Pending |
+| Limits checked before calling out | 63,206 characters | 2200 characters, 30 hashtags, 20 @ tags, no links |
+| Reply to comments | U-test; Pending | U-test; Pending |
+| Hide and unhide comments | U-test; Pending | U-test; Pending |
+| Comments on our posts (inbox) | U-test; Pending | U-test; Pending |
+| Reactions or likes, comments, shares | U-test; Pending | U-test; Pending |
+| Views and reach | `post_media_view` and `post_total_media_view_unique`; null if withheld (`post_impressions` was retired in Nov 2025) | `views`, `reach`, `saved`, `shares` insights; null if withheld |
+| Delete our own post | U-test; Pending | Not offered by the connector |
+| DMs and webhooks | Not built (need a public HTTPS endpoint and the 24-hour window) | Not built |
+| Pages managed by others (municipal clients) | Needs App Review, Advanced Access and business verification | Same |
+
 ## Still to verify (per platform)
 
 - App review or approval needed (Zernio's app vs our own app), and how posts are attributed.

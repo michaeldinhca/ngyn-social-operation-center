@@ -26,8 +26,16 @@ export function actorName(s: DemoState, actorId: string) {
   return actorId === ADMIN_ID ? 'Demo administrator' : (s.users.find((u) => u.id === actorId)?.name ?? 'Unknown user')
 }
 
+// The MCP server sets this so work done through an agent is logged as "ChatGPT for <person>".
+// The browser mockup never sets it.
+let auditLabel: ((name: string) => string) | null = null
+export function setAuditLabel(fn: ((name: string) => string) | null) {
+  auditLabel = fn
+}
+
 export function audit(s: DemoState, actorId: string, action: string, detail: string) {
-  s.audit.unshift({ id: uid('audit'), at: nowISO(), actor: actorName(s, actorId), action, detail })
+  const name = actorName(s, actorId)
+  s.audit.unshift({ id: uid('audit'), at: nowISO(), actor: auditLabel ? auditLabel(name) : name, action, detail })
 }
 
 export function requireAdmin(s: DemoState, actorId: string) {
