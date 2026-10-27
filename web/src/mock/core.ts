@@ -1,4 +1,5 @@
 import type { AccessContext, Actor } from '@/domain/permissions'
+import { isAdminUser } from '@/domain/roles'
 import { ADMIN_ID, type DemoState } from '@/domain/types'
 
 // Shared helpers for the mock API modules.
@@ -18,7 +19,7 @@ export function ctx(s: DemoState): AccessContext {
 export function actorOf(s: DemoState, actorId: string): Actor {
   if (actorId === ADMIN_ID) return { isAdmin: true, user: null }
   const user = s.users.find((u) => u.id === actorId) ?? null
-  return { isAdmin: user?.role === 'Administrator' && user.status === 'Active', user }
+  return { isAdmin: isAdminUser(user), user }
 }
 
 export function actorName(s: DemoState, actorId: string) {

@@ -156,6 +156,7 @@ export function CampaignEditor({ id, onBack }: { id: string; onBack: (open?: str
         }
       />
       <SpendGuardBanner spentCents={row?.spentCents ?? 0} />
+      {row?.isOwn && row.status === 'In review' && <p className="mb-4 rounded-lg bg-surface-2 px-4 py-2.5 text-sm text-text-2">You wrote this campaign, so another ad manager has to review it.</p>}
       {row?.reviewNote && row.status === 'Draft' && (
         <p className="mb-4 rounded-lg bg-warn-soft px-4 py-2.5 text-sm text-warn">
           <strong>Returned with a note:</strong> {row.reviewNote}

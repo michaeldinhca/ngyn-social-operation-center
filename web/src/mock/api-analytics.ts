@@ -1,4 +1,4 @@
-import { AVAILABILITY, daysBetween, makeBuckets, METRICS, percentChange, RANGES, readBucket, UNAVAILABLE_REASON, type Bucket, type MetricKey, type RangeId } from '@/domain/analytics'
+import { AVAILABILITY, customGranularity, daysBetween, makeBuckets, METRICS, percentChange, RANGES, readBucket, UNAVAILABLE_REASON, validateCustom, type Bucket, type MetricKey, type RangeId } from '@/domain/analytics'
 import { canViewAccount, hasAccountFunction, hasFunction } from '@/domain/permissions'
 import type { Department, Network } from '@/domain/types'
 import { addDays } from '@/lib/calendar'
@@ -77,6 +77,9 @@ export interface AnalyticsQuery {
   range: RangeId
   network: Network | 'All'
   department: Department | 'All'
+  /** Required when range is 'custom': Halifax day keys. */
+  from?: string
+  to?: string
 }
 
 const halifaxHour = () => Number(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Halifax', hour: '2-digit', hourCycle: 'h23' }).format(new Date()))
@@ -98,7 +101,12 @@ export function getAnalytics(actorId: string, q: AnalyticsQuery): Promise<Analyt
   const accounts = visible.filter((a) => (q.network === 'All' || a.network === q.network) && (q.department === 'All' || a.department === q.department))
 
   const today = dayKeyHalifax(new Date())
-  const buckets = makeBuckets(q.range, today, halifaxHour())
+  if (q.range === 'custom') {
+    const problem = validateCustom(q.from ?? '', q.to ?? '', today)
+    if (problem) throw new ApiError(problem)
+  }
+  const custom = q.range === 'custom' ? { from: q.from!, to: q.to! } : undefined
+  const buckets = makeBuckets(q.range, today, halifaxHour(), custom)
   const win = whole(buckets)
   const hourly = q.range === '24h'
   const windowDays = daysBetween(win.startDay, win.endDay).length
@@ -164,8 +172,8 @@ export function getAnalytics(actorId: string, q: AnalyticsQuery): Promise<Analyt
 
   return wait({
     range: q.range,
-    rangeLabel: range.label,
-    granularity: range.granularity,
+    rangeLabel: custom ? `Custom range, ${custom.from} to ${custom.to}` : range.label,
+    granularity: custom ? customGranularity(custom.from, custom.to) : range.granularity,
     window: win,
     refreshedAt: halifaxToISO(`${today}T06:00`),
     source: SOURCE_NOTE,

@@ -90,3 +90,7 @@ With stop 2a, every page under **Social Channels & Content** is now rebuilt.
 1. Should an approver be blocked from approving **their own** post (separation of duties)? Today only the functions decide.
 2. Scheduling uses the demo queue's rule of "at least 5 minutes ahead". Is that the right minimum, or should we allow immediate publishing for approved posts?
 3. While the emergency pause is on, you can still write, submit and approve, but not schedule. Should approving be locked too?
+
+## Director answer (2026-10-26)
+
+Question 1 (should an approver be blocked from approving their own post?): **yes.** Done: nobody can approve or return a post they wrote. The post dialog explains it and the API refuses.

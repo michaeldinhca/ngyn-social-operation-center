@@ -7,7 +7,7 @@ import { NetworkMark } from '@/components/social'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Badge, Card, EmptyState, Field, Input, PageHeader, Select, SimBadge, Skeleton } from '@/components/ui/primitives'
-import { FUNCTION_AREAS, FUNCTION_CATALOG, inertFunctions, ROLE_FUNCTIONS, STAFF_ROLES } from '@/domain/roles'
+import { FUNCTION_AREAS, FUNCTION_CATALOG, inertFunctions, isAdminUser, ROLE_FUNCTIONS, STAFF_ROLES } from '@/domain/roles'
 import type { Department, Network, StaffRole, User } from '@/domain/types'
 import { cn } from '@/lib/utils'
 import * as users from '@/mock/api-users'
@@ -146,12 +146,12 @@ export function UsersPage() {
                   <span className="hidden text-sm text-text-2 md:block">{u.role}</span>
                   <span className="hidden text-sm text-text-2 md:block">{u.department}</span>
                   <span className="tabular hidden text-sm text-text-2 md:block">{u.functions.length}</span>
-                  <span className={cn('tabular hidden text-sm md:block', u.role !== 'Administrator' && u.status === 'Active' && u.effectiveChannels === 0 ? 'text-warn' : 'text-text-2')}>{u.role === 'Administrator' ? 'All' : u.effectiveChannels}</span>
+                  <span className={cn('tabular hidden text-sm md:block', !isAdminUser(u) && u.status === 'Active' && u.effectiveChannels === 0 ? 'text-warn' : 'text-text-2')}>{isAdminUser(u) ? 'All' : u.effectiveChannels}</span>
                   <span className="self-start md:self-auto">
                     <Badge tone={STATUS_TONE[u.status]}>{u.status}</Badge>
                   </span>
                   <span className="col-span-2 text-[0.8125rem] text-muted md:hidden">
-                    {u.role} · {u.department} · {u.functions.length} function{u.functions.length === 1 ? '' : 's'} · {u.role === 'Administrator' ? 'all channels' : `${u.effectiveChannels} channel${u.effectiveChannels === 1 ? '' : 's'}`}
+                    {u.role} · {u.department} · {u.functions.length} function{u.functions.length === 1 ? '' : 's'} · {isAdminUser(u) ? 'all channels' : `${u.effectiveChannels} channel${u.effectiveChannels === 1 ? '' : 's'}`}
                   </span>
                 </button>
               </li>
@@ -185,7 +185,7 @@ function PersonDialog({ id, onClose }: { id: string | null; onClose: () => void 
   useEffect(() => setTab('profile'), [id])
 
   const dirty = !!d && !!f && JSON.stringify([f.name, f.email, f.department, f.role, f.status, [...f.functions].sort(), [...f.channels].sort(), [...f.adAccounts].sort()]) !== JSON.stringify([d.user.name, d.user.email, d.user.department, d.user.role, d.user.status, [...d.user.functions].sort(), [...d.user.channels].sort(), [...d.user.adAccounts].sort()])
-  const makesAdmin = !!d && !!f && f.role === 'Administrator' && f.status === 'Active' && !(d.user.role === 'Administrator' && d.user.status === 'Active')
+  const makesAdmin = !!d && !!f && isAdminUser({ status: f.status, functions: f.functions }) && !isAdminUser(d.user)
   // Access also comes from Asset Group roles, so count those before calling a function inert.
   const viaGroupChannels = !!d?.groupRoles.some((g) => g.role !== 'ads' && g.channels.length > 0)
   const viaGroupAds = !!d?.groupRoles.some((g) => g.role === 'ads' && g.adAccounts.length > 0)
@@ -249,7 +249,7 @@ function PersonDialog({ id, onClose }: { id: string | null; onClose: () => void 
                     </Select>
                   )}
                 </Field>
-                <Field label="Role" hint="A label for the person. Administrators have full access to everything.">
+                <Field label="Role" hint="A label only. Full access comes from the Administrator access function.">
                   {(fid) => (
                     <Select id={fid} value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as StaffRole })}>
                       {STAFF_ROLES.map((x) => (
@@ -267,9 +267,9 @@ function PersonDialog({ id, onClose }: { id: string | null; onClose: () => void 
                     </Select>
                   )}
                 </Field>
-                {f.role === 'Administrator' && (
+                {isAdminUser({ status: f.status, functions: f.functions }) && (
                   <p className="flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-sm text-warn sm:col-span-2">
-                    <ShieldAlert className="mt-0.5 size-4 shrink-0" /> Administrators see every channel and ad account and can change anyone's access.
+                    <ShieldAlert className="mt-0.5 size-4 shrink-0" /> This person holds Administrator access: every channel and ad account, and the power to change anyone’s access.
                   </p>
                 )}
                 {d.user.status !== 'Active' && (
@@ -436,13 +436,13 @@ function PersonDialog({ id, onClose }: { id: string | null; onClose: () => void 
       <Dialog
         open={confirmAdmin}
         onOpenChange={setConfirmAdmin}
-        title="Make this person an administrator?"
+        title="Give this person Administrator access?"
         description="Administrators see every channel and ad account, can change anyone's permissions and can pause publishing."
         footer={
           <>
             <Button onClick={() => setConfirmAdmin(false)}>Cancel</Button>
             <Button variant="danger" onClick={commit} disabled={save.isPending}>
-              Make administrator
+              Give Administrator access
             </Button>
           </>
         }

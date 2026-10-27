@@ -24,6 +24,8 @@ export interface PostRow extends Post {
   account: SocialAccount
   authorName: string
   groupName: string | null
+  /** The actor wrote this post. Separation of duties: they cannot approve or return it. */
+  isOwn: boolean
   media: PostMediaRef | null
   actions: PostAction[]
 }
@@ -40,15 +42,17 @@ function toRow(s: ReturnType<typeof db>, actorId: string, p: Post): PostRow {
   const a = actorOf(s, actorId)
   const c = ctx(s)
   const m = s.media.find((x) => x.id === p.mediaId)
+  const isOwn = !!a.user && p.createdBy === a.user.id
   return {
     ...p,
     account: s.accounts.find((x) => x.id === p.accountId)!,
     authorName: s.users.find((u) => u.id === p.createdBy)?.name ?? 'Unknown',
     groupName: s.groups.find((g) => g.id === p.assetGroupId)?.name ?? null,
+    isOwn,
     media: m ? { id: m.id, name: m.name, photo: m.photo, blobId: m.blobId, mime: m.mime, status: m.status } : null,
     actions: postActions(p.status, {
       create: hasAccountFunction(a, 'content.create', p.accountId, c),
-      approve: hasAccountFunction(a, 'content.approve', p.accountId, c),
+      approve: hasAccountFunction(a, 'content.approve', p.accountId, c) && !isOwn,
       publish: hasAccountFunction(a, 'content.publish', p.accountId, c),
     }),
   }
@@ -182,6 +186,9 @@ export function transitionPost(actorId: string, id: string, action: Exclude<Post
   const s = db()
   const p = loadPost(s, actorId, id)
   const row = toRow(s, actorId, p)
+  if ((action === 'approve' || (action === 'return' && p.status === 'In review')) && row.isOwn && hasAccountFunction(actorOf(s, actorId), 'content.approve', p.accountId, ctx(s))) {
+    throw new ApiError('You wrote this post, so another approver has to review it.')
+  }
   if (!row.actions.includes(action)) {
     throw new ApiError(`You can't ${action} this ${p.status.toLowerCase()} post. It needs the right function on ${row.account.name}.`)
   }

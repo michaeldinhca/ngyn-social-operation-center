@@ -20,6 +20,7 @@ export type FunctionId =
   | 'channels.manage'
   | 'assets.manage'
   | 'assets.delete'
+  | 'admin.full'
 
 export interface User {
   id: string
@@ -390,7 +391,7 @@ export interface MediaAsset {
 }
 
 export interface DemoState {
-  version: 4
+  version: 5
   seededAt: string
   users: User[]
   accounts: SocialAccount[]

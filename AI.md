@@ -46,6 +46,8 @@ These come from the handoff and the Product Director. Don't change them without 
 8. **Fictional demo identity.** The demo municipality is "Harbourview" and is fictional. Never show a real municipality, client, procurement number or real resident data in the UI. Stock photos are credited and marked as illustrative.
 9. **Accessibility.** WCAG-aligned work is expected, but never claim AODA/WCAG compliance or certification. Personal display preferences live under My Preferences only.
 10. **Copy style.** No em dashes or en dashes in UI or marketing copy.
+11. **People and agents follow the same rules.** The product is meant to be driven by the customer's ChatGPT through our MCP server (ADR 0002, proposed). An agent acts for a named person with that person's permissions, cannot approve its own or its delegate's work, and has no way to spend. Nobody approves or returns something they wrote.
+12. **Administrator power is the "Administrator access" function,** never the role label.
 
 ## Engineering rules for mockup v1 (`web/`)
 

@@ -15,6 +15,8 @@ export interface CampaignRow extends AdCampaign {
   account: AdAccount
   createdByName: string
   postTitle: string | null
+  /** The actor wrote this campaign. Separation of duties: they cannot approve or return it while it is in review. */
+  isOwn: boolean
   days: number
   totalCents: number
   guard: GuardCheck
@@ -34,15 +36,17 @@ function toRow(s: DemoState, actorId: string, c: AdCampaign): CampaignRow {
   const account = s.adAccounts.find((ad) => ad.id === c.adAccountId)!
   const create = hasAdAccountFunction(a, 'ads.create', c.adAccountId, x)
   const manage = hasAdAccountFunction(a, 'ads.manage', c.adAccountId, x)
+  const isOwn = !!a.user && c.createdBy === a.user.id
   const actions: CampaignAction[] = []
   if (c.status === 'Draft' && create) actions.push('edit', 'submit', 'delete')
-  if (c.status === 'In review' && manage) actions.push('approve', 'return')
+  if (c.status === 'In review' && manage && !isOwn) actions.push('approve', 'return')
   if (c.status === 'Approved' && manage) actions.push('return', 'launch')
   return {
     ...c,
     account,
     createdByName: s.users.find((u) => u.id === c.createdBy)?.name ?? 'Unknown',
     postTitle: s.posts.find((p) => p.id === c.postId)?.title ?? null,
+    isOwn,
     days: campaignDays(c.startDay, c.endDay),
     totalCents: totalBudgetCents(c),
     guard: guardCheck(c, s.campaigns, account.limitCents),
@@ -179,6 +183,9 @@ export function transitionCampaign(actorId: string, id: string, action: 'submit'
   const c = s.campaigns.find((x) => x.id === id)
   if (!c || !canViewAdAccount(actorOf(s, actorId), c.adAccountId, ctx(s))) throw new ApiError('Campaign not found or not in your ad account scope.')
   const row = toRow(s, actorId, c)
+  if ((action === 'approve' || (action === 'return' && c.status === 'In review')) && row.isOwn && hasAdAccountFunction(actorOf(s, actorId), 'ads.manage', c.adAccountId, ctx(s))) {
+    throw new ApiError('You wrote this campaign, so another ad manager has to review it.')
+  }
   if (!row.actions.includes(action)) throw new ApiError(`You can't ${action} this ${c.status.toLowerCase()} campaign.`)
   const next = NEXT_CAMPAIGN_STATUS[action][c.status]!
   if (action === 'submit') {

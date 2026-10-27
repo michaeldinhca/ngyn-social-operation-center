@@ -87,8 +87,8 @@ export function hourWeight(hour: number): number {
   return raw[hour] / sum
 }
 
-export type RangeId = '24h' | '7d' | '30d' | '12w' | '12m' | '4q' | '3y'
-export type Granularity = 'Hourly' | 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Annual'
+export type RangeId = '24h' | '7d' | '30d' | '12w' | '12m' | '4q' | '3y' | 'custom'
+export type Granularity = 'Hourly' | 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Annual' | 'Auto'
 
 export const RANGES: { id: RangeId; label: string; granularity: Granularity }[] = [
   { id: '24h', label: 'Last 24 hours', granularity: 'Hourly' },
@@ -98,6 +98,7 @@ export const RANGES: { id: RangeId; label: string; granularity: Granularity }[] 
   { id: '12m', label: 'Last 12 months', granularity: 'Monthly' },
   { id: '4q', label: 'Last 4 quarters', granularity: 'Quarterly' },
   { id: '3y', label: 'Last 3 years', granularity: 'Annual' },
+  { id: 'custom', label: 'Custom range', granularity: 'Auto' },
 ]
 
 export interface Bucket {
@@ -115,8 +116,53 @@ function lastDayOfMonth(k: string) {
   return addDays(addMonths(k.slice(0, 7) + '-01', 1), -1)
 }
 
+export const DATA_STARTS = '2023-01-01'
+const MAX_CUSTOM_DAYS = 1096
+
+export interface CustomRange {
+  from: string
+  to: string
+}
+
+/** Why a custom range can't be used, or null when it can. */
+export function validateCustom(from: string, to: string, today: string): string | null {
+  const day = /^\d{4}-\d{2}-\d{2}$/
+  if (!day.test(from) || !day.test(to)) return 'Choose a start and end day.'
+  if (from > to) return 'The start day must be on or before the end day.'
+  if (to > today) return 'The end day can be today at the latest.'
+  if (from < DATA_STARTS) return `Sample data starts on ${DATA_STARTS}.`
+  if (daysBetween(from, to).length > MAX_CUSTOM_DAYS) return 'A custom range can cover at most 3 years.'
+  return null
+}
+
+/** Custom ranges pick their own granularity so a chart stays readable. */
+export function customGranularity(from: string, to: string): Granularity {
+  const n = daysBetween(from, to).length
+  return n <= 31 ? 'Daily' : n <= 182 ? 'Weekly' : 'Monthly'
+}
+
+function customBuckets(from: string, to: string): Bucket[] {
+  const g = customGranularity(from, to)
+  if (g === 'Daily') return daysBetween(from, to).map((k) => ({ label: shortDay(k), startDay: k, endDay: k }))
+  const out: Bucket[] = []
+  if (g === 'Weekly') {
+    for (let ws = weekStart(from); ws <= to; ws = addDays(ws, 7)) {
+      const start = ws < from ? from : ws
+      const end = addDays(ws, 6) > to ? to : addDays(ws, 6)
+      out.push({ label: shortDay(start), startDay: start, endDay: end })
+    }
+    return out
+  }
+  for (let ms = from.slice(0, 7) + '-01'; ms <= to; ms = addMonths(ms, 1)) {
+    const start = ms < from ? from : ms
+    const last = lastDayOfMonth(ms)
+    out.push({ label: `${MONTHS[Number(ms.slice(5, 7)) - 1]} ${ms.slice(2, 4)}`, startDay: start, endDay: last > to ? to : last })
+  }
+  return out
+}
+
 /** Buckets for a range, oldest first, ending at (and including) today. `nowHour` is the current Halifax hour. */
-export function makeBuckets(range: RangeId, today: string, nowHour = 23): Bucket[] {
+export function makeBuckets(range: RangeId, today: string, nowHour = 23, custom?: CustomRange): Bucket[] {
   switch (range) {
     case '24h':
       return Array.from({ length: 24 }, (_, i) => {
@@ -158,6 +204,10 @@ export function makeBuckets(range: RangeId, today: string, nowHour = 23): Bucket
         const q = Math.floor((Number(start.slice(5, 7)) - 1) / 3) + 1
         return { label: `Q${q} ${start.slice(0, 4)}`, startDay: start, endDay: i === 3 ? today : lastDayOfMonth(addMonths(start, 2)) }
       })
+    }
+    case 'custom': {
+      if (!custom) throw new Error('A custom range needs a start and end day.')
+      return customBuckets(custom.from, custom.to)
     }
     case '3y': {
       const y = Number(today.slice(0, 4))

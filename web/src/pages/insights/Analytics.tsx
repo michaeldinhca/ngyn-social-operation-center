@@ -6,8 +6,10 @@ import { DataTable, LineChart } from '@/components/charts/charts'
 import { NetworkMark } from '@/components/social'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
-import { Badge, Card, CardHeader, EmptyState, Field, PageHeader, Segmented, Select, SimBadge, Skeleton } from '@/components/ui/primitives'
-import { AVAILABILITY, METRICS, RANGES, UNAVAILABLE_REASON, type MetricKey, type RangeId } from '@/domain/analytics'
+import { Badge, Card, CardHeader, EmptyState, Field, Input, PageHeader, Segmented, Select, SimBadge, Skeleton } from '@/components/ui/primitives'
+import { addDays } from '@/lib/calendar'
+import { dayKeyHalifax } from '@/lib/time'
+import { AVAILABILITY, DATA_STARTS, METRICS, RANGES, UNAVAILABLE_REASON, validateCustom, type MetricKey, type RangeId } from '@/domain/analytics'
 import { NETWORKS, type Department, type Network } from '@/domain/types'
 import { csvFilename } from './filenames'
 import { download, toCsv } from '@/lib/csv'
@@ -38,7 +40,16 @@ export function AnalyticsPage() {
   const [metric, setMetric] = useState<ChartMetric>('impressions')
   const [sort, setSort] = useState<'impressions' | 'engagements' | 'engagementRate' | 'followers' | 'sentiment'>('impressions')
   const [exporting, setExporting] = useState(false)
-  const q = useAnalytics({ range, network, department })
+  const today = dayKeyHalifax(new Date())
+  const [from, setFrom] = useState(addDays(today, -29))
+  const [to, setTo] = useState(today)
+  const customError = range === 'custom' ? validateCustom(from, to, today) : null
+  // Keep showing the last valid report while the dates being typed are not valid yet.
+  const [applied, setApplied] = useState({ from, to })
+  useEffect(() => {
+    if (!customError) setApplied({ from, to })
+  }, [from, to, customError])
+  const q = useAnalytics({ range, network, department, ...(range === 'custom' ? applied : {}) })
   const record = useAction(api.recordExport)
   const r = q.data
 
@@ -201,6 +212,17 @@ export function AnalyticsPage() {
             </Select>
           )}
         </Field>
+        {range === 'custom' && (
+          <div className="order-last grid gap-3 sm:col-span-3 sm:grid-cols-2">
+            <Field label="From" hint={`Sample data starts ${DATA_STARTS}.`}>{(id) => <Input id={id} type="date" min={DATA_STARTS} max={today} value={from} onChange={(e) => setFrom(e.target.value)} />}</Field>
+            <Field label="To" hint="Up to today. At most 3 years in total.">{(id) => <Input id={id} type="date" min={DATA_STARTS} max={today} value={to} onChange={(e) => setTo(e.target.value)} />}</Field>
+            {customError && (
+              <p role="alert" className="text-sm text-bad sm:col-span-2">
+                {customError} Showing the last valid range.
+              </p>
+            )}
+          </div>
+        )}
         <Field label="Network">
           {(id) => (
             <Select id={id} value={network} onChange={(e) => setNetwork(e.target.value as Network | 'All')}>

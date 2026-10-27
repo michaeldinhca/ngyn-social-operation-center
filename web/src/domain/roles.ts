@@ -4,7 +4,7 @@ export const STAFF_ROLES: StaffRole[] = ['Administrator', 'Approver', 'Editor', 
 
 /** The usual functions for a staff role. A starting point only: functions and account assignments stay separate. */
 export const ROLE_FUNCTIONS: Record<StaffRole, FunctionId[]> = {
-  Administrator: ['content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete'],
+  Administrator: ['admin.full', 'content.create', 'content.approve', 'content.publish', 'inbox.respond', 'reports.view', 'ads.create', 'ads.manage', 'ads.accounts.add', 'channels.manage', 'assets.manage', 'assets.delete'],
   Approver: ['content.create', 'content.approve', 'content.publish', 'reports.view'],
   Editor: ['content.create'],
   Responder: ['inbox.respond'],
@@ -35,9 +35,13 @@ export const FUNCTION_CATALOG: FunctionInfo[] = [
   { id: 'channels.manage', label: 'Manage social connections', description: 'Add channels and manage connection health.', area: 'Administration', scoped: 'channels' },
   { id: 'assets.manage', label: 'Manage asset groups', description: 'Create groups, link channels, assign roles, edit brand direction.', area: 'Administration', scoped: null },
   { id: 'assets.delete', label: 'Delete asset groups', description: 'Delete a group without deleting its channels.', area: 'Administration', scoped: null },
+  { id: 'admin.full', label: 'Administrator access', description: 'Full access to every channel, ad account and setting. Can change anyone’s permissions and pause publishing.', area: 'Administration', scoped: null },
 ]
 
 export const FUNCTION_AREAS: FunctionArea[] = ['Content', 'Engagement', 'Insights', 'Advertising', 'Administration']
+
+/** Administrator power comes from this function, not from the Administrator role label. */
+export const isAdminUser = (u: { status: string; functions: FunctionId[] } | null | undefined): boolean => !!u && u.status === 'Active' && u.functions.includes('admin.full')
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export const validEmail = (e: string) => EMAIL.test(e.trim())

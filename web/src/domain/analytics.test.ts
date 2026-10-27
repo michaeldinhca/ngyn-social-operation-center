@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AVAILABILITY, dayMetrics, hourWeight, makeBuckets, percentChange, readBucket } from './analytics'
+import { AVAILABILITY, customGranularity, dayMetrics, hourWeight, makeBuckets, percentChange, readBucket, validateCustom } from './analytics'
 
 const TODAY = '2026-10-21'
 
@@ -67,5 +67,44 @@ describe('analytics generator', () => {
     const day = readBucket(acc, { label: 'd', startDay: '2026-10-01', endDay: '2026-10-01' }).impressions.value!
     const hour = readBucket(acc, { label: 'h', startDay: '2026-10-01', endDay: '2026-10-01', hour: 12 }).impressions.value!
     expect(hour).toBeLessThan(day)
+  })
+
+  describe('custom range', () => {
+    const custom = (from: string, to: string) => makeBuckets('custom', TODAY, 23, { from, to })
+
+    it('uses daily buckets up to 31 days, weekly up to about six months, then monthly', () => {
+      expect(customGranularity('2026-10-01', '2026-10-10')).toBe('Daily')
+      expect(customGranularity('2026-07-01', '2026-10-10')).toBe('Weekly')
+      expect(customGranularity('2025-01-01', '2026-10-10')).toBe('Monthly')
+      expect(custom('2026-10-01', '2026-10-10')).toHaveLength(10)
+    })
+
+    it('weekly buckets are clipped to the chosen range and cover it exactly', () => {
+      const b = custom('2026-07-01', '2026-10-10')
+      expect(b[0].startDay).toBe('2026-07-01')
+      expect(b.at(-1)!.endDay).toBe('2026-10-10')
+      for (let i = 1; i < b.length; i++) expect(b[i].startDay > b[i - 1].endDay).toBe(true)
+    })
+
+    it('monthly buckets are clipped and contiguous', () => {
+      const b = custom('2025-01-15', '2026-10-10')
+      expect(b[0].startDay).toBe('2025-01-15')
+      expect(b[0].endDay).toBe('2025-01-31')
+      expect(b.at(-1)!.endDay).toBe('2026-10-10')
+      expect(b).toHaveLength(22)
+    })
+
+    it('a single day is one bucket', () => {
+      expect(custom('2026-10-01', '2026-10-01')).toHaveLength(1)
+    })
+
+    it('validates the range', () => {
+      expect(validateCustom('2026-10-01', '2026-10-10', TODAY)).toBeNull()
+      expect(validateCustom('', '2026-10-10', TODAY)).toMatch(/Choose/)
+      expect(validateCustom('2026-10-10', '2026-10-01', TODAY)).toMatch(/on or before/)
+      expect(validateCustom('2026-10-01', '2026-11-01', TODAY)).toMatch(/today at the latest/)
+      expect(validateCustom('2022-12-31', '2026-10-01', TODAY)).toMatch(/starts on/)
+      expect(validateCustom('2023-01-01', '2026-10-21', TODAY)).toMatch(/at most 3 years/)
+    })
   })
 })

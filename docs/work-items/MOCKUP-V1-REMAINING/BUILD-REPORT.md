@@ -73,10 +73,22 @@ With this, **every menu screen is rebuilt**. None is a placeholder any more.
 - The activity log can be reset with the rest of the demo data.
 - Users & Access has no bulk edit, and there is no "remove person" (people can be suspended).
 
-## Questions for the Product Director
+## Questions for the Product Director (answered 2026-10-26, see below)
 
 1. **Ad accounts:** the handoff said they were planned later. Is it right to model them as mock accounts that belong to Asset Groups, with their own simulated limit, as I did?
 2. Should **approving a campaign** require someone other than its author (separation of duties)? Today only the function decides, as with posts.
 3. Analytics periods: are the seven periods right (24 hours to 3 years), or should fiscal-year and custom date ranges be added?
 4. Should the analytics PDF include a chart image, or are tables enough for the demo?
 5. **Users:** should "Administrator" stay a role label that grants everything, or become a function that can be given without the label?
+
+## Director answers (2026-10-26) and what was done
+
+| # | Question | Answer | Disposition |
+| ---: | --- | --- | --- |
+| 1 | Model ad accounts as mock accounts owned by Asset Groups? | Not sure: Google and Meta ads are structured differently. The bigger idea is plugging the customer's ChatGPT in to control it, not replicating their ads management layouts. | **Kept as is for now** (mock governance records). Direction recorded in ADR 0002: a thin brief, approval, guard and audit layer, driven by an agent through MCP. The account model is revisited when the MCP tool list is designed. |
+| 2 | Approver other than the author? | Yes | **Done** for campaigns and, for consistency, for posts (which was also an open question in the Content and Media report). Nobody can approve or return what they wrote; the screen says why; the API refuses. Seeded posts are now written by editors so approvers have posts to review. |
+| 3 | More periods? | Custom date range | **Done.** A custom range picks daily, weekly or monthly buckets itself (up to 3 years, from 2023-01-01 to today), explains invalid dates and keeps the last valid report on screen. |
+| 4 | Chart image in the PDF? | No. ChatGPT will connect through our MCP and do its tasks. | **No change.** Recorded in ADR 0002 as "reports as data" (structured results, never zero for unavailable). |
+| 5 | Administrator as a role label or a function? | A function, given separately | **Done.** "Administrator access" is a function. The Administrator role label alone grants nothing. Giving the function asks for confirmation, and the last active administrator is protected by the function, not the label. The demo store version is now 5, so the demo data resets once. |
+
+Checks after these changes: typecheck clean, **75/75** unit tests (new: separation of duties, administrator access, custom ranges), **204/204** browser dry-run (11 new checks), zero page errors.

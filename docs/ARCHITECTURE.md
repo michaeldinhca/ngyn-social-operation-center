@@ -75,4 +75,6 @@ Browser (React SPA, shadcn/ui)
                                PostgreSQL (one database per municipality instance)
 ```
 
+Agents: the customer's ChatGPT connects through an MCP server that calls the same service layer as the UI, as a delegate of a named person (ADR 0002, proposed). The mock API in `web/src/mock/` is the draft tool contract.
+
 Key rule: the schedule and the emergency pause live in our database. Zernio only receives a post when it is approved and due.

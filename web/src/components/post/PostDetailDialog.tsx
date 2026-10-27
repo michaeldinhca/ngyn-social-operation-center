@@ -137,6 +137,7 @@ export function PostDetailDialog({ id, onClose }: { id: string | null; onClose: 
                 <strong>Returned with a note:</strong> {p.reviewNote}
               </p>
             )}
+            {p.isOwn && p.status === 'In review' && <p className="rounded-lg bg-surface-2 px-3 py-2 text-text-2">You wrote this post, so another approver has to review it.</p>}
             {d.paused && (p.status === 'Approved' || p.status === 'Scheduled') && <p className="rounded-lg bg-bad-soft px-3 py-2 text-bad">Emergency pause is active. Scheduling and rescheduling are locked.</p>}
             {p.account.connection.status === 'Expired' && p.status !== 'Published' && <p className="rounded-lg bg-warn-soft px-3 py-2 text-warn">{p.account.name} has an expired connection. The demo queue blocks this post until the channel is reconnected.</p>}
 

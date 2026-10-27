@@ -1,5 +1,5 @@
 import { canViewAccount, canViewAdAccount, hasAccountFunction, hasAdAccountFunction } from '@/domain/permissions'
-import { FUNCTION_CATALOG, ROLE_FUNCTIONS, STAFF_ROLES, validEmail } from '@/domain/roles'
+import { FUNCTION_CATALOG, isAdminUser, ROLE_FUNCTIONS, STAFF_ROLES, validEmail } from '@/domain/roles'
 import type { AuditEvent, Department, FunctionId, StaffRole, User } from '@/domain/types'
 import { ApiError, audit, ctx, requireAdmin, uid, wait } from './core'
 import { db, persist } from './db'
@@ -73,7 +73,7 @@ export function getStaff(actorId: string, id: string): Promise<StaffDetail> {
   const adFns: FunctionId[] = ['ads.create', 'ads.manage']
   return wait({
     user: u,
-    isAdminRole: u.role === 'Administrator' && u.status === 'Active',
+    isAdminRole: isAdminUser(u),
     channels: s.accounts.filter((a) => u.channels.includes(a.id)).map((a) => ({ id: a.id, name: a.name, network: a.network, groupName: groupName(a.assetGroupId) })),
     adAccounts: s.adAccounts.filter((a) => u.adAccounts.includes(a.id)).map((a) => ({ id: a.id, name: a.name, network: a.network })),
     groupRoles: roles.map(({ g, a }) => ({
@@ -161,9 +161,9 @@ export function updateStaff(actorId: string, id: string, patch: StaffPatch) {
   if (patch.channels.some((cid) => !s.accounts.some((a) => a.id === cid))) throw new ApiError('Unknown channel.')
   if (patch.adAccounts.some((cid) => !s.adAccounts.some((a) => a.id === cid))) throw new ApiError('Unknown ad account.')
 
-  const wasAdmin = u.role === 'Administrator' && u.status === 'Active'
-  const willBeAdmin = patch.role === 'Administrator' && patch.status === 'Active'
-  if (wasAdmin && !willBeAdmin && !s.users.some((x) => x.id !== id && x.role === 'Administrator' && x.status === 'Active')) {
+  const wasAdmin = isAdminUser(u)
+  const willBeAdmin = isAdminUser({ status: patch.status, functions: patch.functions })
+  if (wasAdmin && !willBeAdmin && !s.users.some((x) => x.id !== id && isAdminUser(x))) {
     throw new ApiError('This is the last active administrator. Make someone else an active administrator first.')
   }
 

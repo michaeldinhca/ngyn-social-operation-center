@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FUNCTION_CATALOG, inertFunctions, ROLE_FUNCTIONS, validEmail } from './roles'
+import { FUNCTION_CATALOG, inertFunctions, isAdminUser, ROLE_FUNCTIONS, validEmail } from './roles'
 
 describe('roles and functions', () => {
   it('every role function exists in the catalog', () => {
@@ -22,5 +22,15 @@ describe('roles and functions', () => {
     expect(validEmail('maya.chen@harbourview.example')).toBe(true)
     expect(validEmail('no-at-sign')).toBe(false)
     expect(validEmail('a@b')).toBe(false)
+  })
+
+  it('administrator power comes from the function, not the role label', () => {
+    expect(isAdminUser({ status: 'Active', functions: ['admin.full'] })).toBe(true)
+    expect(isAdminUser({ status: 'Active', functions: ['content.create'] })).toBe(false)
+    expect(isAdminUser({ status: 'Suspended', functions: ['admin.full'] })).toBe(false)
+    expect(isAdminUser({ status: 'Invited', functions: ['admin.full'] })).toBe(false)
+    expect(isAdminUser(null)).toBe(false)
+    expect(ROLE_FUNCTIONS.Administrator).toContain('admin.full')
+    expect(ROLE_FUNCTIONS.Approver).not.toContain('admin.full')
   })
 })

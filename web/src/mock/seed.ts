@@ -307,7 +307,7 @@ export function createSeed(now = Date.now()): DemoState {
     // Scheduled posts spread over the next three weeks at business-hour slots, in Halifax time.
     const k = i - 16
     const scheduled = status === 'Scheduled' ? halifaxToISO(`${dayKeyHalifax(new Date(now + (1 + k * 2.6) * day))}T${['09:00', '12:30', '17:00'][k % 3]}`) : null
-    const author = users.find((u) => u.department === department && u.functions.includes('content.create'))
+    const author = users.find((u) => u.department === department && u.role === 'Editor') ?? users.find((u) => u.department === department && u.functions.includes('content.create'))
     const approver = users.find((u) => u.department === department && u.functions.includes('content.approve')) ?? users[0]
     const created = now - (8 + i) * hour
     const history: PostEvent[] = [{ id: `ev-${i}-0`, at: iso(created), actor: author?.name ?? 'Avery Morgan', action: 'Created' }]
@@ -504,7 +504,7 @@ export function createSeed(now = Date.now()): DemoState {
   ]
 
   return {
-    version: 4,
+    version: 5,
     seededAt: iso(now),
     users,
     accounts,
