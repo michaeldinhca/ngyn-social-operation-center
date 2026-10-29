@@ -57,7 +57,7 @@ These come from the handoff and the Product Director. Don't change them without 
 
 ## Engineering rules for connectors (`connectors/`)
 
-- Connectors are the only code that calls a real social network. Phase 1 exceptions, recorded in ADR 0003 and 0004: the Bluesky, LinkedIn and Meta connectors, on a developer machine, with **test accounts only**.
+- Connectors are the only code that calls a real social network. Phase 1 exceptions, recorded in ADR 0003, 0004 and 0006: the Bluesky, LinkedIn, Meta and YouTube connectors, on a developer machine, with **test accounts only**. No X connector (Director decision, 2026-10-28).
 - Credentials live in a git-ignored `.env`, never in the browser, the repo, chat or logs.
 - Each connector enforces the product rules itself (named approver, emergency pause, ALT text, audit). Unit tests use a fake client and no network; live checks are opt-in scripts.
 
@@ -97,7 +97,7 @@ For each work item, create `docs/work-items/<ID>/BUILD-REPORT.md` with: scope im
 | `docs/PLATFORM_CAPABILITY_MATRIX.md` | Evidence-backed per-platform capability status |
 | `docs/dry-runs/` | Dated browser dry-run reports |
 | `docs/handoff/` | Original Codex handoff and build brief (reference, read-only) |
-| `connectors/` | Real network connectors, run locally: Bluesky (ADR 0003), LinkedIn and Meta (ADR 0004); see each README |
+| `connectors/` | Real network connectors, run locally: Bluesky (ADR 0003), LinkedIn and Meta (ADR 0004), YouTube (ADR 0006); see each README |
 | `mcp/` | MCP server: each staff member connects their own ChatGPT, acting as them (ADR 0005); see its README |
 | `web/` | **Mockup v1** (React + Vite). All new UI work goes here; see `web/README.md` |
 | `docs/work-items/` | Build reports per work item and review section |

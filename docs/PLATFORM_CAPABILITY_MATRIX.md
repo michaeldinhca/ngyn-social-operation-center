@@ -79,6 +79,26 @@ Built 2026-10-27 against Graph API v26.0, every call signed with `appsecret_proo
 | DMs and webhooks | Not built (need a public HTTPS endpoint and the 24-hour window) | Not built |
 | Pages managed by others (municipal clients) | Needs App Review, Advanced Access and business verification | Same |
 
+## YouTube through our own connector (`connectors/youtube`, ADR 0006)
+
+Built 2026-10-28 against the Data API v3 and the Analytics API. Same legend; **Pending** needs the Director's Google Cloud project and a test channel.
+
+| Capability | Status |
+| --- | --- |
+| Sign in (Google OAuth with PKCE, refresh token written to `.env`) | Pending |
+| Upload a Short (3 minutes or less, square or vertical, checked from the file) or a regular video | U-test; Pending. Unaudited projects: YouTube locks uploads to private |
+| Captions as ALT text (SRT or WebVTT required; video stays private until they're on) | U-test; Pending |
+| Title 100 characters, description 5000 bytes, tags 500 characters, no `<` `>`, made-for-kids answer required | U-test |
+| Reply to a comment (under the thread's top comment) or comment on our video | U-test; Pending |
+| Comments across the channel (inbox), including those held for review | U-test; Pending. Up to five replies per thread |
+| Hide (reject), show again, or approve held comments | U-test; Pending |
+| Views, likes, comments | U-test; Pending. Likes `null` if hidden |
+| Shares | Analytics API, a day or two behind; `null` until then |
+| Reach, impressions, saves | U: not in YouTube's API. `null` |
+| Delete our own video | U-test; Pending |
+| DMs, webhooks | None: YouTube has no DMs and no comment webhooks; the inbox is polled |
+| Quota | 10,000 units a day by default; uploads use most of it |
+
 ## Still to verify (per platform)
 
 - App review or approval needed (Zernio's app vs our own app), and how posts are attributed.

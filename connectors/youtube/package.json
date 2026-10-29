@@ -1,0 +1,22 @@
+{
+  "name": "ngyn-soc-connector-youtube",
+  "version": "0.1.0",
+  "private": true,
+  "description": "YouTube connector for the NGYN Social Operation Center. Runs locally; holds tokens server-side, never in the browser.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "auth": "node --env-file-if-exists=.env src/auth.ts",
+    "start": "node --env-file-if-exists=.env src/server.ts",
+    "smoke": "node --env-file-if-exists=.env src/smoke.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}
